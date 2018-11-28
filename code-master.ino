@@ -29,6 +29,8 @@ void process_serial(){
   switch (cmd) {
     case 'S': scanI2CDevices(scanResults); break;
     case 'L': flash_led(); break;
+    case 'O': open_gate(); break;
+    case 'C': close_gate(); break;
     case 'R': read_status(); break;
   }
   
@@ -43,7 +45,21 @@ void flash_led()
 {
   Wire.beginTransmission(0x2F);
   Wire.write(1); // RegAddress
+  Wire.write(4); // Value
+  Wire.endTransmission();
+}
+void open_gate()
+{
+  Wire.beginTransmission(0x2F);
+  Wire.write(0); // RegAddress
   Wire.write(1); // Value
+  Wire.endTransmission();
+}
+void close_gate()
+{
+  Wire.beginTransmission(0x2F);
+  Wire.write(0); // RegAddress
+  Wire.write(0); // Value
   Wire.endTransmission();
 }
 void read_status()
