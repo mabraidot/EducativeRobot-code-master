@@ -2,36 +2,147 @@
 extern "C" {
   #include "utility/twi.h"
 }
-char action;
 
-void scanI2CDevices(void(*callback)(byte address, byte result) )
+byte blocks[255] = {0};
+
+void scanI2CDevices()
 {
-  Serial.println("\nScanning I2C bus...");
+  bool finding = true;
+  uint8_t discovered = 1;
   byte rc;
   byte data = 0;
-  for( byte addr = 1; addr <= 127; addr++ ) {
-    rc = twi_writeTo(addr, &data, 0, 1, 0);
-    callback( addr, rc );
+  byte block_position = 0;
+  while(finding)
+  {
+    finding = false;
+    for( byte addr = 1; addr <= 127; addr++ ) {
+      rc = twi_writeTo(addr, &data, 0, 1, 0);
+      if(rc == 0)       // Block found
+      {
+        discovered = read_state(addr, 0);
+        /*Serial.print("\nAddr: ");
+        Serial.print(addr);
+        Serial.print("\t Discovered: ");
+        Serial.print(discovered);
+        Serial.println("\n");
+        */
+        if(!discovered)  // If undiscovered
+        {
+          blocks[block_position] = addr;
+          block_position++;
+          set_discovered(addr);
+          delay(500);
+          open_gate(addr);
+          finding = true;
+        }
+      }
+    }
+  }
+  scanResults();
+
+}
+void scanResults(){
+  Serial.println("\nScanning I2C bus...");
+  for( byte i = 0; i < sizeof(blocks); i++ )
+  {
+    if(blocks[i])
+    {
+      Serial.print(i);
+      Serial.print(": ");
+      Serial.print(blocks[i]);
+      Serial.print( (i%10) ? "\t":"\n");
+    }
   }
   Serial.println("\nScanning finished\n");
+
 }
-void scanResults( byte addr, byte result ) {
-  Serial.print("Address: ");
-  Serial.print(addr,HEX);
-  Serial.print( (result==0) ? " Found!":"      ");
-  Serial.print( (addr%4) ? "\t":"\n");
+
+
+
+
+
+void flash_led(byte address)
+{
+  Wire.beginTransmission(address);
+  Wire.write(2); // RegAddress
+  Wire.write(7); // Value
+  Wire.endTransmission();
+}
+
+void open_gate(byte address)
+{
+  Wire.beginTransmission(address);
+  Wire.write(1); // RegAddress
+  Wire.write(1); // Value
+  Wire.endTransmission();
+}
+
+void close_gate(byte address)
+{
+  Wire.beginTransmission(address);
+  Wire.write(1); // RegAddress
+  Wire.write(0); // Value
+  Wire.endTransmission();
+}
+
+
+void set_discovered(byte address)
+{
+  Wire.beginTransmission(address);
+  Wire.write(0); // RegAddress
+  Wire.write(1); // Value
+  Wire.endTransmission();
+}
+
+void read_status(byte address)
+{
+  Serial.println("\nSlave Status Start -----------------------------");
+  Serial.println(address, HEX);
+
+  for(int j=0;j<3;j++)
+  {
+    Wire.requestFrom(address, (uint8_t)1);
+    if(Wire.available())
+    {
+      byte i = Wire.read();
+      Serial.print(j);
+      Serial.print(":\t");
+      Serial.print(i);
+      Serial.print("\n");
+    }
+  }
+  Serial.println("Slave Status End -------------------------------\n");
+}
+uint8_t read_state(byte address, byte reg)
+{
+  //Serial.println("\nReg State Start -----------------------------");
+  uint8_t status[3];
+  for(int j=0;j<sizeof(status);j++)
+  {
+    Wire.requestFrom(address, (uint8_t)1);
+    if(Wire.available())
+    {
+      status[j] = Wire.read();
+    }
+  }
+  
+  /*Serial.print(reg);
+  Serial.print("\t");
+  Serial.print(status[reg]);
+  Serial.println("\nReg State End -------------------------------\n");
+  */
+  return status[reg];
 }
 
 void process_serial(){
   char cmd = Serial.read();
   if (cmd > 'Z') cmd -= 32;
-  action = cmd;
   switch (cmd) {
-    case 'S': scanI2CDevices(scanResults); break;
-    case 'L': flash_led(); break;
-    case 'O': open_gate(); break;
-    case 'C': close_gate(); break;
-    case 'R': read_status(); break;
+    case 'S': scanI2CDevices(); break;
+    case 'L': flash_led(0x2F); break;
+    case 'O': open_gate(0x2F); break;
+    case 'C': close_gate(0x2F); break;
+    case 'R': read_status(0x2F); break;
   }
   
   while (Serial.read() != 10); // dump extra characters till LF is seen (you can use CRLF or just LF)
@@ -41,59 +152,20 @@ void process_serial(){
 
 
 
-void flash_led()
-{
-  Wire.beginTransmission(0x2F);
-  Wire.write(1); // RegAddress
-  Wire.write(7); // Value
-  Wire.endTransmission();
-}
-void open_gate()
-{
-  Wire.beginTransmission(0x2F);
-  Wire.write(0); // RegAddress
-  Wire.write(1); // Value
-  Wire.endTransmission();
-}
-void close_gate()
-{
-  Wire.beginTransmission(0x2F);
-  Wire.write(0); // RegAddress
-  Wire.write(0); // Value
-  Wire.endTransmission();
-}
-void read_status()
-{
-  Serial.println("\nStart -----------------------------");
-
-  for(int j=0;j<2;j++)
-  {
-    Wire.requestFrom(0x2F, 1);
-    //while(Wire.available())
-    if(Wire.available())
-    {
-      byte i = Wire.read();
-      Serial.println(i);
-    }
-  }
-  Serial.println("End -------------------------------\n");
-}
 
 
 void setup()
 {
   Wire.begin();
   Serial.begin(9600);
-
+  
   // wait for slave to finish any init sequence
   delay(2000);
 
   // scan for I2C devices connected
-  scanI2CDevices( scanResults );
+  //scanI2CDevices( scanResults );
   
 }
-
-
 
 void loop()
 {
@@ -101,6 +173,4 @@ void loop()
   if (Serial.available()) process_serial();
 
 }
-
-
 

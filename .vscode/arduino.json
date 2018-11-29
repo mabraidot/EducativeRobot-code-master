@@ -1,6 +1,5 @@
 {
     "board": "arduino:avr:uno",
     "port": "COM6",
-    "output": "build",
     "sketch": "code-master.ino"
 }
