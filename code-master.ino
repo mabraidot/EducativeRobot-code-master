@@ -45,7 +45,7 @@ void flash_led()
 {
   Wire.beginTransmission(0x2F);
   Wire.write(1); // RegAddress
-  Wire.write(4); // Value
+  Wire.write(7); // Value
   Wire.endTransmission();
 }
 void open_gate()
@@ -65,12 +65,14 @@ void close_gate()
 void read_status()
 {
   Serial.println("\nStart -----------------------------");
+
   for(int j=0;j<2;j++)
   {
     Wire.requestFrom(0x2F, 1);
-    while(Wire.available())
+    //while(Wire.available())
+    if(Wire.available())
     {
-      int i = Wire.read();
+      byte i = Wire.read();
       Serial.println(i);
     }
   }
