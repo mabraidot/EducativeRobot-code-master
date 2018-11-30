@@ -11,6 +11,7 @@ void scanI2CDevices()
   uint8_t discovered = 1;
   byte rc;
   byte data = 0;
+  memset(blocks,0,sizeof(blocks));
   byte block_position = 0;
   while(finding)
   {
