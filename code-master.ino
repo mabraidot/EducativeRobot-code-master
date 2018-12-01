@@ -3,10 +3,16 @@ extern "C" {
   #include "utility/twi.h"
 }
 
+#define SLAVE_PIN 12
+
 byte blocks[255] = {0};
+
+
 
 void scanI2CDevices()
 {
+  enable_slaves();
+
   bool finding = true;
   uint8_t discovered = 1;
   byte rc;
@@ -135,6 +141,17 @@ uint8_t read_state(byte address, byte reg)
   return status[reg];
 }
 
+
+void enable_slaves(){
+  digitalWrite(SLAVE_PIN, HIGH);
+  delay(500);
+}
+
+void disable_slaves(){
+  digitalWrite(SLAVE_PIN, LOW);
+}
+
+
 void process_serial(){
   char cmd = Serial.read();
   if (cmd > 'Z') cmd -= 32;
@@ -144,6 +161,7 @@ void process_serial(){
     case 'O': open_gate(0x2F); break;
     case 'C': close_gate(0x2F); break;
     case 'R': read_status(0x2F); break;
+    case 'D': disable_slaves(); break;
   }
   
   while (Serial.read() != 10); // dump extra characters till LF is seen (you can use CRLF or just LF)
@@ -159,7 +177,10 @@ void setup()
 {
   Wire.begin();
   Serial.begin(9600);
-  
+
+  pinMode(SLAVE_PIN, OUTPUT);             // Fist slave enable pin
+  digitalWrite(SLAVE_PIN, LOW);
+
   // wait for slave to finish any init sequence
   delay(2000);
 
