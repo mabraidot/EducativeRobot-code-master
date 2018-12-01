@@ -6,7 +6,7 @@ extern "C" {
 #define SLAVE_PIN 12
 
 byte blocks[255] = {0};
-
+uint8_t status[3];
 
 
 void scanI2CDevices()
@@ -106,7 +106,7 @@ void read_status(byte address)
   Serial.println("\nSlave Status Start -----------------------------");
   Serial.println(address, HEX);
 
-  for(int j=0;j<3;j++)
+  for(int j=0;j<sizeof(status);j++)
   {
     Wire.requestFrom(address, (uint8_t)1);
     if(Wire.available())
@@ -123,7 +123,6 @@ void read_status(byte address)
 uint8_t read_state(byte address, byte reg)
 {
   //Serial.println("\nReg State Start -----------------------------");
-  uint8_t status[3];
   for(int j=0;j<sizeof(status);j++)
   {
     Wire.requestFrom(address, (uint8_t)1);
