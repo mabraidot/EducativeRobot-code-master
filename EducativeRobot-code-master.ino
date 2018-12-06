@@ -175,7 +175,7 @@ void process_serial(){
 void setup()
 {
   Wire.begin();
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   pinMode(SLAVE_PIN, OUTPUT);             // Fist slave enable pin
   digitalWrite(SLAVE_PIN, LOW);
