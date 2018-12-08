@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
     "port": "COM6",
-    "sketch": "code-master.ino"
+    "sketch": "EducativeRobot-code-master.ino"
 }

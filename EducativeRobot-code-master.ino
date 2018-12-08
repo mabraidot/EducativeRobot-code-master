@@ -3,7 +3,8 @@ extern "C" {
   #include "utility/twi.h"
 }
 
-#define SLAVE_PIN 12
+#define SLAVE_ACTIVATE_PIN 12
+#define SLAVE_ADDRESS 0x01
 
 byte blocks[255] = {0};
 uint8_t status[3];
@@ -11,6 +12,8 @@ uint8_t status[3];
 
 void scanI2CDevices()
 {
+
+  disable_slaves();
   enable_slaves();
 
   bool finding = true;
@@ -18,36 +21,30 @@ void scanI2CDevices()
   byte rc;
   byte data = 0;
   memset(blocks,0,sizeof(blocks));
+  byte block_address = SLAVE_ADDRESS + 1;
   byte block_position = 0;
   while(finding)
   {
     finding = false;
-    for( byte addr = 1; addr <= 127; addr++ ) {
-      rc = twi_writeTo(addr, &data, 0, 1, 0);
-      if(rc == 0)       // Block found
-      {
-        discovered = read_state(addr, 0);
-        /*Serial.print("\nAddr: ");
-        Serial.print(addr);
-        Serial.print("\t Discovered: ");
-        Serial.print(discovered);
-        Serial.println("\n");
-        */
-        if(!discovered)  // If undiscovered
-        {
-          blocks[block_position] = addr;
-          block_position++;
-          set_discovered(addr);
-          delay(500);
-          open_gate(addr);
-          finding = true;
-        }
-      }
+    rc = twi_writeTo(SLAVE_ADDRESS, &data, 0, 1, 0);
+    if(rc == 0)       // Block found
+    {
+      //give it an address
+      blocks[block_position] = block_address;
+      add_slave(block_address);
+      delay(1000);
+      open_gate(block_address);
+      delay(500);
+
+      finding = true;
+      block_position++;
+      block_address++;
+      
     }
   }
   scanResults();
-
 }
+
 void scanResults(){
   Serial.println("\nScanning I2C bus...");
   for( byte i = 0; i < sizeof(blocks); i++ )
@@ -89,6 +86,14 @@ void close_gate(byte address)
   Wire.beginTransmission(address);
   Wire.write(1); // RegAddress
   Wire.write(0); // Value
+  Wire.endTransmission();
+}
+
+void add_slave(byte address)
+{
+  Wire.beginTransmission(SLAVE_ADDRESS);
+  Wire.write(0); // RegAddress
+  Wire.write(address); // Value
   Wire.endTransmission();
 }
 
@@ -142,12 +147,12 @@ uint8_t read_state(byte address, byte reg)
 
 
 void enable_slaves(){
-  digitalWrite(SLAVE_PIN, HIGH);
+  digitalWrite(SLAVE_ACTIVATE_PIN, HIGH);
   delay(500);
 }
 
 void disable_slaves(){
-  digitalWrite(SLAVE_PIN, LOW);
+  digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
 }
 
 
@@ -156,10 +161,10 @@ void process_serial(){
   if (cmd > 'Z') cmd -= 32;
   switch (cmd) {
     case 'S': scanI2CDevices(); break;
-    case 'L': flash_led(0x2F); break;
-    case 'O': open_gate(0x2F); break;
-    case 'C': close_gate(0x2F); break;
-    case 'R': read_status(0x2F); break;
+    case 'L': flash_led(SLAVE_ADDRESS); break;
+    case 'O': open_gate(SLAVE_ADDRESS); break;
+    case 'C': close_gate(SLAVE_ADDRESS); break;
+    case 'R': read_status(SLAVE_ADDRESS); break;
     case 'D': disable_slaves(); break;
   }
   
@@ -177,8 +182,8 @@ void setup()
   Wire.begin();
   Serial.begin(115200);
 
-  pinMode(SLAVE_PIN, OUTPUT);             // Fist slave enable pin
-  digitalWrite(SLAVE_PIN, LOW);
+  pinMode(SLAVE_ACTIVATE_PIN, OUTPUT);             // Fist slave enable pin
+  digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
 
   // wait for slave to finish any init sequence
   delay(2000);
