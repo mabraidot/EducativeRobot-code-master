@@ -153,6 +153,7 @@ void enable_slaves(){
 
 void disable_slaves(){
   digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
+  memset(blocks,0,sizeof(blocks));
 }
 
 
@@ -161,10 +162,22 @@ void process_serial(){
   if (cmd > 'Z') cmd -= 32;
   switch (cmd) {
     case 'S': scanI2CDevices(); break;
-    case 'L': flash_led(SLAVE_ADDRESS); break;
-    case 'O': open_gate(SLAVE_ADDRESS); break;
-    case 'C': close_gate(SLAVE_ADDRESS); break;
-    case 'R': read_status(SLAVE_ADDRESS); break;
+    case 'L': {
+        flash_led(Serial.parseInt()); 
+      }
+      break;
+    case 'O': {
+        open_gate(Serial.parseInt()); 
+      }
+      break;
+    case 'C': {
+        close_gate(Serial.parseInt()); 
+      }
+      break;
+    case 'R': {
+        read_status(Serial.parseInt()); 
+      }
+      break;
     case 'D': disable_slaves(); break;
   }
   
@@ -199,4 +212,3 @@ void loop()
   if (Serial.available()) process_serial();
 
 }
-
