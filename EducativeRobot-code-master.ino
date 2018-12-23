@@ -4,7 +4,9 @@ extern "C" {
 }
 
 #define SLAVE_ACTIVATE_PIN 12
-#define SLAVE_ADDRESS 0x01
+const byte SLAVE_ADDRESS = 0x01;
+const byte SLAVE_MODIFIER_ADDRESS = 0x02;
+const byte SLAVE_START_ADDRESS = 20;
 
 byte blocks[255] = {0};
 uint8_t status[3];
@@ -17,21 +19,39 @@ void scanI2CDevices()
   enable_slaves();
 
   bool finding = true;
+  bool finding_modifier = true;
   uint8_t discovered = 1;
   byte rc;
   byte data = 0;
   memset(blocks,0,sizeof(blocks));
-  byte block_address = SLAVE_ADDRESS + 1;
+  byte block_address = SLAVE_START_ADDRESS;
   byte block_position = 0;
-  while(finding)
-  {
+  while(finding){
+    // @TODO: make it recursive
+    finding_modifier = true;
+    while(finding_modifier){
+      finding_modifier = false;
+      rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &data, 0, 1, 0);
+      if(rc == 0){       // Block found
+        //give it an address
+        blocks[block_position] = block_address;
+        add_slave(SLAVE_MODIFIER_ADDRESS, block_address);
+        delay(300);
+        open_gate(block_address);
+        delay(300);
+      
+        finding_modifier = true;
+        block_position++;
+        block_address++;
+      }
+    }
+
     finding = false;
     rc = twi_writeTo(SLAVE_ADDRESS, &data, 0, 1, 0);
-    if(rc == 0)       // Block found
-    {
+    if(rc == 0){       // Block found
       //give it an address
       blocks[block_position] = block_address;
-      add_slave(block_address);
+      add_slave(SLAVE_ADDRESS, block_address);
       delay(300);
       open_gate(block_address);
       delay(300);
@@ -39,9 +59,10 @@ void scanI2CDevices()
       finding = true;
       block_position++;
       block_address++;
-      
     }
   }
+
+
   scanResults();
 }
 
@@ -117,7 +138,7 @@ void close_gate(byte address)
   Wire.endTransmission();
 }
 
-void add_slave(byte address)
+void add_slave(const byte old_address, byte address)
 {
   if(debug){
     if(!slaveExists(address)){
@@ -125,7 +146,7 @@ void add_slave(byte address)
       Serial.println(F(": Doesn't exists."));
     }
   }
-  Wire.beginTransmission(SLAVE_ADDRESS);
+  Wire.beginTransmission(old_address);
   Wire.write(0);        // RegAddress
   Wire.write(address);  // Value
   Wire.endTransmission();
