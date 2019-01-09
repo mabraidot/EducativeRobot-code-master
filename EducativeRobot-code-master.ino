@@ -9,7 +9,7 @@ const byte SLAVE_MODIFIER_ADDRESS = 0x02;
 const byte SLAVE_START_ADDRESS = 20;
 
 byte blocks[255] = {0};
-uint8_t status[3];
+uint8_t status[4];
 bool debug = true;
 
 void scanI2CDevices()
@@ -34,15 +34,25 @@ void scanI2CDevices()
       rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &data, 0, 1, 0);
       if(rc == 0){       // Block found
         //give it an address
-        blocks[block_position] = block_address;
+        if(debug){
+          Serial.println(block_address);
+          Serial.println("Adding slave modifier ...");
+        }
         add_slave(SLAVE_MODIFIER_ADDRESS, block_address);
-        delay(300);
-        open_gate(block_address);
-        delay(300);
-      
-        finding_modifier = true;
-        block_position++;
-        block_address++;
+        delay(600);
+        // If modifier was activated successfully, open its gate
+        if(read_state(block_address, 3)){
+          blocks[block_position] = block_address;
+          if(debug){
+            Serial.println("Opening gate modifier ...");
+          }
+          open_gate(block_address);
+          delay(300);
+        
+          finding_modifier = true;
+          block_position++;
+          block_address++;
+        }
       }
     }
 
@@ -50,15 +60,25 @@ void scanI2CDevices()
     rc = twi_writeTo(SLAVE_ADDRESS, &data, 0, 1, 0);
     if(rc == 0){       // Block found
       //give it an address
-      blocks[block_position] = block_address;
+      if(debug){
+        Serial.println(block_address);
+        Serial.println("Adding slave ...");
+      }
       add_slave(SLAVE_ADDRESS, block_address);
-      delay(300);
-      open_gate(block_address);
-      delay(300);
+      delay(600);
+      // If slave was activated successfully, open its gate
+      if(read_state(block_address, 3)){
+        blocks[block_position] = block_address;
+        if(debug){
+          Serial.println("Opening gate ...");
+        }
+        open_gate(block_address);
+        delay(300);
 
-      finding = true;
-      block_position++;
-      block_address++;
+        finding = true;
+        block_position++;
+        block_address++;
+      }
     }
   }
 
@@ -98,70 +118,76 @@ bool slaveExists(byte address){
 
 void flash_led(byte address)
 {
-  if(debug){
-    if(!slaveExists(address)){
+  
+  if(!slaveExists(address)){
+    if(debug){
       Serial.print(address);
       Serial.println(F(": Doesn't exists."));
     }
+  }else{
+    Wire.beginTransmission(address);
+    Wire.write(2);        // RegAddress
+    Wire.write(7);        // Value
+    Wire.endTransmission();
   }
-  Wire.beginTransmission(address);
-  Wire.write(2);        // RegAddress
-  Wire.write(7);        // Value
-  Wire.endTransmission();
 }
 
 void open_gate(byte address)
 {
-  if(debug){
-    if(!slaveExists(address)){
+  if(!slaveExists(address)){
+    if(debug){
       Serial.print(address);
       Serial.println(F(": Doesn't exists."));
     }
+  }else{
+    Wire.beginTransmission(address);
+    Wire.write(1);        // RegAddress
+    Wire.write(1);        // Value
+    Wire.endTransmission();
   }
-  Wire.beginTransmission(address);
-  Wire.write(1);        // RegAddress
-  Wire.write(1);        // Value
-  Wire.endTransmission();
 }
 
 void close_gate(byte address)
 {
-  if(debug){
-    if(!slaveExists(address)){
+  if(!slaveExists(address)){
+    if(debug){
       Serial.print(address);
       Serial.println(F(": Doesn't exists."));
     }
+  }else{
+    Wire.beginTransmission(address);
+    Wire.write(1);        // RegAddress
+    Wire.write(0);        // Value
+    Wire.endTransmission();
   }
-  Wire.beginTransmission(address);
-  Wire.write(1);        // RegAddress
-  Wire.write(0);        // Value
-  Wire.endTransmission();
 }
 
 void add_slave(const byte old_address, byte address)
 {
-  if(debug){
-    if(!slaveExists(address)){
+  /*if(!slaveExists(address)){
+    if(debug){
       Serial.print(address);
       Serial.println(F(": Doesn't exists."));
     }
-  }
-  Wire.beginTransmission(old_address);
-  Wire.write(0);        // RegAddress
-  Wire.write(address);  // Value
-  Wire.endTransmission();
+  }else{*/
+    Wire.beginTransmission(old_address);
+    Wire.write(0);        // RegAddress
+    Wire.write(address);  // Value
+    Wire.endTransmission();
+  //}
 }
 
 
 void read_status(byte address)
 {
   Serial.println(F("\nSlave Status Start -----------------------------"));
-  Serial.println(address, HEX);
+  Serial.println(address);
 
   if(!slaveExists(address)){
     Serial.println(F("Doesn't exists."));
   }else{
   
+    memset(status,0,sizeof(status));
     for(int j=0;j<sizeof(status);j++)
     {
       Wire.requestFrom(address, (uint8_t)1);
@@ -183,14 +209,7 @@ void read_status(byte address)
 
 uint8_t read_state(byte address, byte reg)
 {
-  if(debug){
-    Serial.println(F("\nReg State Start -----------------------------"));
-    if(!slaveExists(address)){
-      Serial.print(address);
-      Serial.println(F(": Doesn't exists."));
-    }
-  }
-
+  memset(status,0,sizeof(status));
   for(int j=0;j<sizeof(status);j++)
   {
     Wire.requestFrom(address, (uint8_t)1);
@@ -201,6 +220,7 @@ uint8_t read_state(byte address, byte reg)
   }
 
   if(debug){
+    Serial.println(F("\nReg State Start -----------------------------"));
     Serial.print(reg);
     Serial.print(F("\t"));
     Serial.print(status[reg]);
@@ -213,12 +233,13 @@ uint8_t read_state(byte address, byte reg)
 
 void enable_slaves(){
   digitalWrite(SLAVE_ACTIVATE_PIN, HIGH);
-  delay(500);
+  delay(300);
 }
 
 void disable_slaves(){
   digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
   memset(blocks,0,sizeof(blocks));
+  delay(300);
 }
 
 void help(){
@@ -276,7 +297,6 @@ void setup()
 
   pinMode(SLAVE_ACTIVATE_PIN, OUTPUT);             // Fist slave enable pin
   digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
-
   // wait for slave to finish any init sequence
   delay(2000);
 
