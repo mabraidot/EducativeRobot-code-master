@@ -2,11 +2,8 @@
 extern "C" {
   #include "utility/twi.h"
 }
+#include "config.h"
 
-#define SLAVE_ACTIVATE_PIN 12
-const byte SLAVE_ADDRESS = 0x01;
-const byte SLAVE_MODIFIER_ADDRESS = 0x02;
-const byte SLAVE_START_ADDRESS = 20;
 
 byte blocks[255] = {0};
 uint8_t status[4];
