@@ -7,3 +7,5 @@
 #define SLAVE_MODIFIER_ADDRESS      0x02
 #define SLAVE_START_ADDRESS         10
 
+// General
+#define DEBUG                       true

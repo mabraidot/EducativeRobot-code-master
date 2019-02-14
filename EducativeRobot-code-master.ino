@@ -3,11 +3,15 @@ extern "C" {
   #include "utility/twi.h"
 }
 #include "config.h"
+#include "debug.h"
 
+Debug debug;
+
+
+char buffer[5];
 
 byte blocks[255] = {0};
 uint8_t status[4];
-bool debug = true;
 
 void scanI2CDevices()
 {
@@ -31,18 +35,15 @@ void scanI2CDevices()
       rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &data, 0, 1, 0);
       if(rc == 0){       // Block found
         //give it an address
-        if(debug){
-          Serial.println(block_address);
-          Serial.println("Adding slave modifier ...");
-        }
+        strcpy(buffer, (char*)block_address);
+        debug.println(buffer);
+        debug.println(F("Adding slave modifier ..."));
         add_slave(SLAVE_MODIFIER_ADDRESS, block_address);
         delay(600);
         // If modifier was activated successfully, open its gate
         if(read_state(block_address, 3)){
           blocks[block_position] = block_address;
-          if(debug){
-            Serial.println("Opening gate modifier ...");
-          }
+          debug.println(F("Opening gate modifier ..."));
           open_gate(block_address);
           delay(300);
         
@@ -57,18 +58,16 @@ void scanI2CDevices()
     rc = twi_writeTo(SLAVE_ADDRESS, &data, 0, 1, 0);
     if(rc == 0){       // Block found
       //give it an address
-      if(debug){
-        Serial.println(block_address);
-        Serial.println("Adding slave ...");
-      }
+      strcpy(buffer, (char*)block_address);
+      debug.println(buffer);
+      debug.println(F("Adding slave ..."));
+
       add_slave(SLAVE_ADDRESS, block_address);
       delay(600);
       // If slave was activated successfully, open its gate
       if(read_state(block_address, 3)){
         blocks[block_position] = block_address;
-        if(debug){
-          Serial.println("Opening gate ...");
-        }
+        debug.println(F("Opening gate ..."));
         open_gate(block_address);
         delay(300);
 
@@ -84,18 +83,20 @@ void scanI2CDevices()
 }
 
 void scanResults(){
-  Serial.println(F("\nScanning I2C bus..."));
+  debug.println(F("\nScanning I2C bus..."));
   for( byte i = 0; i < sizeof(blocks); i++ )
   {
     if(blocks[i])
     {
-      Serial.print(i);
-      Serial.print(F(": "));
-      Serial.print(blocks[i]);
-      Serial.print( (i%10) ? F("\t"):F("\n"));
+      strcpy(buffer, (char*)i);
+      debug.print(buffer);
+      debug.print(F(": "));
+      strcpy(buffer, (char*)blocks[i]);
+      debug.print(buffer);
+      debug.print( (i==0 || i%10) ? F("\t"):F("\n"));
     }
   }
-  Serial.println(F("\nScanning finished\n"));
+  debug.println(F("\nScanning finished\n"));
 
 }
 
@@ -117,10 +118,9 @@ void flash_led(byte address)
 {
   
   if(!slaveExists(address)){
-    if(debug){
-      Serial.print(address);
-      Serial.println(F(": Doesn't exists."));
-    }
+    strcpy(buffer, (char*)address);
+    debug.println(buffer);
+    debug.println(F(": Doesn't exists."));
   }else{
     Wire.beginTransmission(address);
     Wire.write(2);        // RegAddress
@@ -132,10 +132,9 @@ void flash_led(byte address)
 void open_gate(byte address)
 {
   if(!slaveExists(address)){
-    if(debug){
-      Serial.print(address);
-      Serial.println(F(": Doesn't exists."));
-    }
+    strcpy(buffer, (char*)address);
+    debug.print(buffer);
+    debug.println(F(": Doesn't exists."));
   }else{
     Wire.beginTransmission(address);
     Wire.write(1);        // RegAddress
@@ -147,10 +146,9 @@ void open_gate(byte address)
 void close_gate(byte address)
 {
   if(!slaveExists(address)){
-    if(debug){
-      Serial.print(address);
-      Serial.println(F(": Doesn't exists."));
-    }
+    strcpy(buffer, (char*)address);
+    debug.print(buffer);
+    debug.println(F(": Doesn't exists."));
   }else{
     Wire.beginTransmission(address);
     Wire.write(1);        // RegAddress
@@ -162,10 +160,9 @@ void close_gate(byte address)
 void add_slave(const byte old_address, byte address)
 {
   /*if(!slaveExists(address)){
-    if(debug){
-      Serial.print(address);
-      Serial.println(F(": Doesn't exists."));
-    }
+      strcpy(buffer, (char*)address);
+      debug.print(buffer);
+      debug.println(F(": Doesn't exists."));
   }else{*/
     Wire.beginTransmission(old_address);
     Wire.write(0);        // RegAddress
@@ -177,11 +174,12 @@ void add_slave(const byte old_address, byte address)
 
 void read_status(byte address)
 {
-  Serial.println(F("\nSlave Status Start -----------------------------"));
-  Serial.println(address);
+  debug.println(F("\nSlave Status Start -----------------------------"));
+  strcpy(buffer, (char*)address);
+  debug.println(buffer);
 
   if(!slaveExists(address)){
-    Serial.println(F("Doesn't exists."));
+    debug.println(F("Doesn't exists."));
   }else{
   
     memset(status,0,sizeof(status));
@@ -191,16 +189,18 @@ void read_status(byte address)
       if(Wire.available())
       {
         byte i = Wire.read();
-        Serial.print(j);
-        Serial.print(F(":\t"));
-        Serial.print(i);
-        Serial.print(F("\n"));
+        strcpy(buffer, (char*)j);
+        debug.print(buffer);
+        debug.print(F(":\t"));
+        strcpy(buffer, (char*)i);
+        debug.print(buffer);
+        debug.print(F("\n"));
       }
     }
 
   }
 
-  Serial.println(F("Slave Status End -------------------------------\n"));
+  debug.println(F("Slave Status End -------------------------------\n"));
 }
 
 
@@ -216,14 +216,14 @@ uint8_t read_state(byte address, byte reg)
     }
   }
 
-  if(debug){
-    Serial.println(F("\nReg State Start -----------------------------"));
-    Serial.print(reg);
-    Serial.print(F("\t"));
-    Serial.print(status[reg]);
-    Serial.println(F("\nReg State End -------------------------------\n"));
-  }
-
+  debug.println(F("\nReg State Start -----------------------------"));
+  strcpy(buffer, (char*)reg);
+  debug.print(buffer);
+  debug.print(F("\t"));
+  strcpy(buffer, (char*)status[reg]);
+  debug.print(buffer);
+  debug.println(F("\nReg State End -------------------------------\n"));
+  
   return status[reg];
 }
 
@@ -240,16 +240,17 @@ void disable_slaves(){
 }
 
 void help(){
-  Serial.println(F("\nI2C CONSOLE INTERFACE"));
-  Serial.println(F("Available commands:"));
-  Serial.println(F(""));
-  Serial.println(F("H: This help"));
-  Serial.println(F("S: Scan for I2C slaves"));
-  Serial.println(F("M: Show list of slaves found"));
-  Serial.println(F("D: Disable all slaves"));
-  Serial.println(F("L<addr>: Flash the onboard led of slave on <addr> address"));
-  Serial.println(F("O<addr>: Activate the child slave of the slave on <addr> address"));
-  Serial.println(F("C<addr>: Deactivate all the children slaves of the slave on <addr> address"));
+  debug.println(F("\nI2C CONSOLE INTERFACE"));
+  debug.println(F("Available commands:"));
+  debug.println(F(""));
+  debug.println(F("H: This help"));
+  debug.println(F("S: Scan for I2C slaves"));
+  debug.println(F("M: Show list of slaves found"));
+  debug.println(F("D: Disable all slaves"));
+  debug.println(F("R<addr>: Read the buffer status of slave on <addr> address"));
+  debug.println(F("L<addr>: Flash the onboard led of slave on <addr> address"));
+  debug.println(F("O<addr>: Activate the child slave of the slave on <addr> address"));
+  debug.println(F("C<addr>: Deactivate all the children slaves of the slave on <addr> address"));
 }
 
 void process_serial(){
