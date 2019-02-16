@@ -6,8 +6,6 @@ extern "C" {
 #include "debug.h"
 
 
-char buffer[5];
-
 byte blocks[255] = {0};
 uint8_t status[4];
 
@@ -39,8 +37,7 @@ void scanI2CDevices(){
       rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &data, 0, 1, 0);
       if(rc == 0){       // Block found
         //give it an address
-        strcpy(buffer, (char*)block_address);
-        debug.println(buffer);
+        debug.println(block_address);
         debug.println(F("Adding slave modifier ..."));
         add_slave(SLAVE_MODIFIER_ADDRESS, block_address);
         delay(600);
@@ -62,8 +59,7 @@ void scanI2CDevices(){
     rc = twi_writeTo(SLAVE_ADDRESS, &data, 0, 1, 0);
     if(rc == 0){       // Block found
       //give it an address
-      strcpy(buffer, (char*)block_address);
-      debug.println(buffer);
+      debug.println(block_address);
       debug.println(F("Adding slave ..."));
 
       add_slave(SLAVE_ADDRESS, block_address);
@@ -92,11 +88,9 @@ void scanResults(){
   {
     if(blocks[i])
     {
-      strcpy(buffer, (char*)i);
-      debug.print(buffer);
+      debug.print(i);
       debug.print(F(": "));
-      strcpy(buffer, (char*)blocks[i]);
-      debug.print(buffer);
+      debug.print(blocks[i]);
       debug.print( (i==0 || i%10) ? F("\t"):F("\n"));
     }
   }
@@ -122,8 +116,7 @@ void flash_led(byte address)
 {
   
   if(!slaveExists(address)){
-    strcpy(buffer, (char*)address);
-    debug.println(buffer);
+    debug.println(address);
     debug.println(F(": Doesn't exists."));
   }else{
     Wire.beginTransmission(address);
@@ -136,8 +129,7 @@ void flash_led(byte address)
 void open_gate(byte address)
 {
   if(!slaveExists(address)){
-    strcpy(buffer, (char*)address);
-    debug.print(buffer);
+    debug.print(address);
     debug.println(F(": Doesn't exists."));
   }else{
     Wire.beginTransmission(address);
@@ -150,8 +142,7 @@ void open_gate(byte address)
 void close_gate(byte address)
 {
   if(!slaveExists(address)){
-    strcpy(buffer, (char*)address);
-    debug.print(buffer);
+    debug.print(address);
     debug.println(F(": Doesn't exists."));
   }else{
     Wire.beginTransmission(address);
@@ -164,8 +155,7 @@ void close_gate(byte address)
 void add_slave(const byte old_address, byte address)
 {
   /*if(!slaveExists(address)){
-      strcpy(buffer, (char*)address);
-      debug.print(buffer);
+      debug.print(address);
       debug.println(F(": Doesn't exists."));
   }else{*/
     Wire.beginTransmission(old_address);
@@ -179,8 +169,7 @@ void add_slave(const byte old_address, byte address)
 void read_status(byte address)
 {
   debug.println(F("\nSlave Status Start -----------------------------"));
-  strcpy(buffer, (char*)address);
-  debug.println(buffer);
+  debug.println(address);
 
   if(!slaveExists(address)){
     debug.println(F("Doesn't exists."));
@@ -193,11 +182,9 @@ void read_status(byte address)
       if(Wire.available())
       {
         byte i = Wire.read();
-        strcpy(buffer, (char*)j);
-        debug.print(buffer);
+        debug.print(j);
         debug.print(F(":\t"));
-        strcpy(buffer, (char*)i);
-        debug.print(buffer);
+        debug.print(i);
         debug.print(F("\n"));
       }
     }
@@ -221,11 +208,9 @@ uint8_t read_state(byte address, byte reg)
   }
 
   debug.println(F("\nReg State Start -----------------------------"));
-  strcpy(buffer, (char*)reg);
-  debug.print(buffer);
+  debug.print(reg);
   debug.print(F("\t"));
-  strcpy(buffer, (char*)status[reg]);
-  debug.print(buffer);
+  debug.print(status[reg]);
   debug.println(F("\nReg State End -------------------------------\n"));
   
   return status[reg];
@@ -295,6 +280,9 @@ void setup()
 
   pinMode(SLAVE_ACTIVATE_PIN, OUTPUT);             // Fist slave enable pin
   digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
+  pinMode(FUNCTION_ACTIVATE_PIN, OUTPUT);          // Fist function enable pin
+  digitalWrite(FUNCTION_ACTIVATE_PIN, LOW);
+  
   // wait for slave to finish any init sequence
   delay(2000);
 

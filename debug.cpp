@@ -1,19 +1,18 @@
 #include "config.h"
 #include "debug.h"
 
-void Debug::print(String message, bool eol=false){
-  if(DEBUG){
-    if(eol){
-      Serial.println(message);
-    }else{
-      Serial.print(message);
-    }
-  }
-}
 void Debug::print(String message){
-  print(message, false);
+  Serial.print(message);
 }
 
 void Debug::println(String message){
-  print(message, true);
+  Serial.println(message);
+}
+
+void Debug::print(byte message){
+  Serial.print(message);
+}
+
+void Debug::println(byte message){
+  Serial.println(message);
 }
