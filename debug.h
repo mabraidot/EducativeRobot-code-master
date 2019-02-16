@@ -16,4 +16,6 @@ class Debug {
 
 };
 
+extern Debug debug;
+
 #endif //DEBUG_H

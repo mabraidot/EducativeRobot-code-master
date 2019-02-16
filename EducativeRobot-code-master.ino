@@ -5,28 +5,32 @@ extern "C" {
 #include "config.h"
 #include "debug.h"
 
-Debug debug;
-
 
 char buffer[5];
 
 byte blocks[255] = {0};
 uint8_t status[4];
 
-void scanI2CDevices()
-{
+bool finding;
+bool finding_modifier;
+uint8_t discovered;
+byte rc;
+byte data;
+byte block_address;
+byte block_position;
+
+void scanI2CDevices(){
 
   disable_slaves();
   enable_slaves();
 
-  bool finding = true;
-  bool finding_modifier = true;
-  uint8_t discovered = 1;
-  byte rc;
-  byte data = 0;
+  finding = true;
+  finding_modifier = true;
+  discovered = 1;
+  data = 0;
   memset(blocks,0,sizeof(blocks));
-  byte block_address = SLAVE_START_ADDRESS;
-  byte block_position = 0;
+  block_address = SLAVE_START_ADDRESS;
+  block_position = 0;
   while(finding){
     // @TODO: make it recursive
     finding_modifier = true;
@@ -78,8 +82,8 @@ void scanI2CDevices()
     }
   }
 
-
   scanResults();
+
 }
 
 void scanResults(){
@@ -260,23 +264,19 @@ void process_serial(){
     case 'H': help(); break;
     case 'S': scanI2CDevices(); break;
     case 'M': scanResults(); break;
-    case 'L': {
-        flash_led(Serial.parseInt()); 
-      }
-      break;
-    case 'O': {
-        open_gate(Serial.parseInt()); 
-      }
-      break;
-    case 'C': {
-        close_gate(Serial.parseInt()); 
-      }
-      break;
-    case 'R': {
-        read_status(Serial.parseInt()); 
-      }
-      break;
     case 'D': disable_slaves(); break;
+    case 'L': 
+        flash_led(Serial.parseInt()); 
+        break;
+    case 'O': 
+        open_gate(Serial.parseInt()); 
+        break;
+    case 'C': 
+        close_gate(Serial.parseInt()); 
+        break;
+    case 'R': 
+        read_status(Serial.parseInt()); 
+        break;
   }
   
   while (Serial.read() != 10); // dump extra characters till LF is seen (you can use CRLF or just LF)
