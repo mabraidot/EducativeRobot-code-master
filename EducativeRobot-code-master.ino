@@ -1,232 +1,7 @@
-#include <Wire.h>
-extern "C" {
-  #include "utility/twi.h"
-}
 #include "config.h"
 #include "debug.h"
+#include "blocks.h"
 
-
-byte blocks[255] = {0};
-uint8_t status[4];
-
-bool finding;
-bool finding_modifier;
-uint8_t discovered;
-byte rc;
-byte data;
-byte block_address;
-byte block_position;
-
-void scanI2CDevices(){
-
-  disable_slaves();
-  enable_slaves();
-
-  finding = true;
-  finding_modifier = true;
-  discovered = 1;
-  data = 0;
-  memset(blocks,0,sizeof(blocks));
-  block_address = SLAVE_START_ADDRESS;
-  block_position = 0;
-  while(finding){
-    // @TODO: make it recursive
-    finding_modifier = true;
-    while(finding_modifier){
-      finding_modifier = false;
-      rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &data, 0, 1, 0);
-      if(rc == 0){       // Block found
-        //give it an address
-        debug.println(block_address);
-        debug.println(F("Adding slave modifier ..."));
-        add_slave(SLAVE_MODIFIER_ADDRESS, block_address);
-        delay(600);
-        // If modifier was activated successfully, open its gate
-        if(read_state(block_address, 3)){
-          blocks[block_position] = block_address;
-          debug.println(F("Opening gate modifier ..."));
-          open_gate(block_address);
-          delay(300);
-        
-          finding_modifier = true;
-          block_position++;
-          block_address++;
-        }
-      }
-    }
-
-    finding = false;
-    rc = twi_writeTo(SLAVE_ADDRESS, &data, 0, 1, 0);
-    if(rc == 0){       // Block found
-      //give it an address
-      debug.println(block_address);
-      debug.println(F("Adding slave ..."));
-
-      add_slave(SLAVE_ADDRESS, block_address);
-      delay(600);
-      // If slave was activated successfully, open its gate
-      if(read_state(block_address, 3)){
-        blocks[block_position] = block_address;
-        debug.println(F("Opening gate ..."));
-        open_gate(block_address);
-        delay(300);
-
-        finding = true;
-        block_position++;
-        block_address++;
-      }
-    }
-  }
-
-  scanResults();
-
-}
-
-void scanResults(){
-  debug.println(F("\nScanning I2C bus..."));
-  for( byte i = 0; i < sizeof(blocks); i++ )
-  {
-    if(blocks[i])
-    {
-      debug.print(i);
-      debug.print(F(": "));
-      debug.print(blocks[i]);
-      debug.print( (i==0 || i%10) ? F("\t"):F("\n"));
-    }
-  }
-  debug.println(F("\nScanning finished\n"));
-
-}
-
-bool slaveExists(byte address){
-  bool found = false;
-  for( byte i = 0; i < sizeof(blocks); i++ ){
-    if(blocks[i] == address){
-      found = true;
-    }
-  }
-
-  return found;
-}
-
-
-
-
-void flash_led(byte address)
-{
-  
-  if(!slaveExists(address)){
-    debug.println(address);
-    debug.println(F(": Doesn't exists."));
-  }else{
-    Wire.beginTransmission(address);
-    Wire.write(2);        // RegAddress
-    Wire.write(7);        // Value
-    Wire.endTransmission();
-  }
-}
-
-void open_gate(byte address)
-{
-  if(!slaveExists(address)){
-    debug.print(address);
-    debug.println(F(": Doesn't exists."));
-  }else{
-    Wire.beginTransmission(address);
-    Wire.write(1);        // RegAddress
-    Wire.write(1);        // Value
-    Wire.endTransmission();
-  }
-}
-
-void close_gate(byte address)
-{
-  if(!slaveExists(address)){
-    debug.print(address);
-    debug.println(F(": Doesn't exists."));
-  }else{
-    Wire.beginTransmission(address);
-    Wire.write(1);        // RegAddress
-    Wire.write(0);        // Value
-    Wire.endTransmission();
-  }
-}
-
-void add_slave(const byte old_address, byte address)
-{
-  /*if(!slaveExists(address)){
-      debug.print(address);
-      debug.println(F(": Doesn't exists."));
-  }else{*/
-    Wire.beginTransmission(old_address);
-    Wire.write(0);        // RegAddress
-    Wire.write(address);  // Value
-    Wire.endTransmission();
-  //}
-}
-
-
-void read_status(byte address)
-{
-  debug.println(F("\nSlave Status Start -----------------------------"));
-  debug.println(address);
-
-  if(!slaveExists(address)){
-    debug.println(F("Doesn't exists."));
-  }else{
-  
-    memset(status,0,sizeof(status));
-    for(int j=0;j<sizeof(status);j++)
-    {
-      Wire.requestFrom(address, (uint8_t)1);
-      if(Wire.available())
-      {
-        byte i = Wire.read();
-        debug.print(j);
-        debug.print(F(":\t"));
-        debug.print(i);
-        debug.print(F("\n"));
-      }
-    }
-
-  }
-
-  debug.println(F("Slave Status End -------------------------------\n"));
-}
-
-
-uint8_t read_state(byte address, byte reg)
-{
-  memset(status,0,sizeof(status));
-  for(int j=0;j<sizeof(status);j++)
-  {
-    Wire.requestFrom(address, (uint8_t)1);
-    if(Wire.available())
-    {
-      status[j] = Wire.read();
-    }
-  }
-
-  debug.println(F("\nReg State Start -----------------------------"));
-  debug.print(reg);
-  debug.print(F("\t"));
-  debug.print(status[reg]);
-  debug.println(F("\nReg State End -------------------------------\n"));
-  
-  return status[reg];
-}
-
-
-void enable_slaves(){
-  digitalWrite(SLAVE_ACTIVATE_PIN, HIGH);
-  delay(300);
-}
-
-void disable_slaves(){
-  digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
-  memset(blocks,0,sizeof(blocks));
-  delay(300);
-}
 
 void help(){
   debug.println(F("\nI2C CONSOLE INTERFACE"));
@@ -247,20 +22,20 @@ void process_serial(){
   if (cmd > 'Z') cmd -= 32;
   switch (cmd) {
     case 'H': help(); break;
-    case 'S': scanI2CDevices(); break;
-    case 'M': scanResults(); break;
-    case 'D': disable_slaves(); break;
+    case 'S': blocks.scanI2CDevices(); break;
+    case 'M': blocks.scanResults(); break;
+    case 'D': blocks.disable_slaves(); break;
     case 'L': 
-        flash_led(Serial.parseInt()); 
+        blocks.flash_led(Serial.parseInt()); 
         break;
     case 'O': 
-        open_gate(Serial.parseInt()); 
+        blocks.open_gate(Serial.parseInt()); 
         break;
     case 'C': 
-        close_gate(Serial.parseInt()); 
+        blocks.close_gate(Serial.parseInt()); 
         break;
     case 'R': 
-        read_status(Serial.parseInt()); 
+        blocks.read_status(Serial.parseInt()); 
         break;
   }
   
@@ -275,19 +50,12 @@ void process_serial(){
 
 void setup()
 {
-  Wire.begin();
   Serial.begin(115200);
 
-  pinMode(SLAVE_ACTIVATE_PIN, OUTPUT);             // Fist slave enable pin
-  digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
-  pinMode(FUNCTION_ACTIVATE_PIN, OUTPUT);          // Fist function enable pin
-  digitalWrite(FUNCTION_ACTIVATE_PIN, LOW);
+  blocks.init();
   
   // wait for slave to finish any init sequence
   delay(2000);
-
-  // scan for I2C devices connected
-  //scanI2CDevices( scanResults );
   
 }
 

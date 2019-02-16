@@ -1,19 +1,17 @@
 #ifndef DEBUG_H
 #define DEBUG_H
 
-#include "Arduino.h"
-
 class Debug {
 
-  public:
-    
-    Debug() {};
+    public:
 
-    void print(String message);
-    void println(String message);
-    
-    void print(byte message);
-    void println(byte message);
+        Debug() {};
+
+        void print(String message);
+        void println(String message);
+
+        void print(byte message);
+        void println(byte message);
 
 };
 
