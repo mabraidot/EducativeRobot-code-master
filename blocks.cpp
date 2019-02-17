@@ -57,7 +57,6 @@ void Blocks::scanI2CDevices(void){
                 // If modifier was activated successfully, open its gate
                 if(read_state(_block_address, 3)){
                     _blocks[_block_position].address = _block_address;
-                    debug.println(F("Opening gate modifier ..."));
                     open_gate(_block_address);
                     delay(300);
                 
@@ -80,7 +79,6 @@ void Blocks::scanI2CDevices(void){
             // If slave was activated successfully, open its gate
             if(read_state(_block_address, 3)){
                 _blocks[_block_position].address = _block_address;
-                debug.println(F("Opening gate ..."));
                 open_gate(_block_address);
                 delay(300);
 
@@ -151,42 +149,44 @@ void Blocks::disable_slaves(void){
 
 void Blocks::open_gate(byte address){
     debug.print(address);
-    if(!slaveExists(address)){
+    debug.println(F(": Opening."));
+    /*if(!slaveExists(address)){
         debug.println(F(": Doesn't exists."));
-    }else{
-        debug.println(F(": Opening."));
+    }else{*/
         Wire.beginTransmission(address);
         Wire.write(1);        // RegAddress
         Wire.write(1);        // Value
         Wire.endTransmission();
-    }
+    //}
 }
 
 
 void Blocks::close_gate(byte address){
     debug.print(address);
-    if(!slaveExists(address)){
+    debug.println(F(": Closing."));
+    /*if(!slaveExists(address)){
         debug.println(F(": Doesn't exists."));
-    }else{
-        debug.println(F(": Closing."));
+    }else{*/
         Wire.beginTransmission(address);
         Wire.write(1);        // RegAddress
         Wire.write(0);        // Value
         Wire.endTransmission();
-    }
+    //}
 }
 
 
 void Blocks::flash_led(byte address, byte mode){
-    if(!slaveExists(address)){
+    debug.print(address);
+    debug.println(F(": Led change."));
+    /*if(!slaveExists(address)){
         debug.println(address);
         debug.println(F(": Doesn't exists."));
-    }else{
+    }else{*/
         Wire.beginTransmission(address);
         Wire.write(2);        // RegAddress
         Wire.write(mode);     // Value
         Wire.endTransmission();
-    }
+    //}
 }
 
 
@@ -194,9 +194,9 @@ void Blocks::read_status(byte address){
     debug.println(F("Slave Status Start -----------------------------"));
     debug.println(address);
 
-    if(!slaveExists(address)){
+    /*if(!slaveExists(address)){
         debug.println(F("Doesn't exists."));
-    }else{
+    }else{*/
         memset(_status,0,sizeof(_status));
         for(int j=0;j<sizeof(_status);j++){
             Wire.requestFrom(address, (uint8_t)1);
@@ -208,7 +208,7 @@ void Blocks::read_status(byte address){
                 debug.print(F("\n"));
             }
         }
-    }
+    //}
     debug.println(F("Slave Status End -------------------------------\n"));
 }
 
