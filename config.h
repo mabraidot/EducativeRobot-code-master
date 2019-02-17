@@ -14,6 +14,17 @@
 #define FUNCTION_ADDRESS            0x03
 #define SLAVE_START_ADDRESS         10
 
-// General
+#define SLAVES_COUNT                50
+#define SLAVES_MODIFIERS_COUNT      5
+#define FUNCTION_COUNT              10
+#define FUNCTION_MODIFIERS_COUNT    5
+
+// SLAVE FUNCTIONS
+#define MODIFIER_LOOP               1
+#define SLAVE_FORWARD_ARROW         2
+#define SLAVE_LEFT_ARROW            2
+#define SLAVE_RIGHT_ARROW           3
+
+// GENERAL
 #define DEBUG                       true
 #define SILENT                      false

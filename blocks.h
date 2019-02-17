@@ -18,21 +18,56 @@ class Blocks {
 
         void open_gate(byte address);
         void close_gate(byte address);
-        void flash_led(byte address);
+        void flash_led(byte address, byte mode);
         void read_status(byte address);
         uint8_t read_state(byte address, byte reg);
 
     private:
 
-        byte _blocks[255]        = {0};
-        uint8_t _status[4];
-        bool _finding;
-        bool _finding_modifier;
-        uint8_t _discovered;
-        byte _rc;
-        byte _data;
-        byte _block_address;
-        byte _block_position;
+        typedef struct {
+            byte address;
+            byte type;
+            byte value;
+        } _functionModifier;
+
+        typedef struct {
+            byte address;
+            byte type;
+            _functionModifier modifiers[FUNCTION_MODIFIERS_COUNT];
+        } _functionBlock;
+
+        _functionBlock _functions[FUNCTION_COUNT];
+
+        typedef struct {
+            byte address;
+            byte type;
+            byte value;
+        } _slaveModifier;
+
+        typedef struct {
+            byte address;
+            byte type;
+            _slaveModifier modifiers[SLAVES_MODIFIERS_COUNT];
+        } _slaveBlock;
+
+        _slaveBlock _blocks[SLAVES_COUNT];
+        //byte _blocks[128]        = {0};
+
+        void _empty_blocks(void);
+
+        /**
+         * Array of state values from slaves
+         * Pos 0 -> Set new I2C address
+         * Pos 1 -> Activate any child slave
+         * Pos 2 -> Flash the LED. Posible values:
+         *          0 -> Off
+         *          1 -> On
+         *          2 -> Blink
+         * Pos 3 -> Activated block
+         * Pos 4 -> Slave function. e.g. Forward arrow
+         * Pos 5 -> Slave modifying value
+         */
+        uint8_t _status[6];
 
 };
 

@@ -23,18 +23,25 @@ void Blocks::init(void){
 }
 
 
+void Blocks::_empty_blocks(void){
+    memset(_blocks,0,SLAVES_COUNT);
+}
+
+
 void Blocks::scanI2CDevices(void){
 
     disable_slaves();
     enable_slaves();
 
-    _finding = true;
-    _finding_modifier = true;
-    _discovered = 1;
-    _data = 0;
-    memset(_blocks,0,sizeof(_blocks));
-    _block_address = SLAVE_START_ADDRESS;
-    _block_position = 0;
+    bool _finding = true;
+    bool _finding_modifier = true;
+    uint8_t _discovered = 1;
+    byte _rc = 1;
+    byte _data = 0;
+    //memset(_blocks,0,SLAVES_COUNT);
+    _empty_blocks();
+    byte _block_address = SLAVE_START_ADDRESS;
+    byte _block_position = 0;
     while(_finding){
         // @TODO: make it recursive
         _finding_modifier = true;
@@ -49,7 +56,7 @@ void Blocks::scanI2CDevices(void){
                 delay(600);
                 // If modifier was activated successfully, open its gate
                 if(read_state(_block_address, 3)){
-                    _blocks[_block_position] = _block_address;
+                    _blocks[_block_position].address = _block_address;
                     debug.println(F("Opening gate modifier ..."));
                     open_gate(_block_address);
                     delay(300);
@@ -72,7 +79,7 @@ void Blocks::scanI2CDevices(void){
             delay(600);
             // If slave was activated successfully, open its gate
             if(read_state(_block_address, 3)){
-                _blocks[_block_position] = _block_address;
+                _blocks[_block_position].address = _block_address;
                 debug.println(F("Opening gate ..."));
                 open_gate(_block_address);
                 delay(300);
@@ -91,11 +98,11 @@ void Blocks::scanI2CDevices(void){
 
 void Blocks::scanResults(void){
     debug.println(F("\nScanning I2C bus..."));
-    for( byte i = 0; i < sizeof(_blocks); i++ ){
-        if(_blocks[i]){
+    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+        if(_blocks[i].address){
             debug.print(i);
             debug.print(F(": "));
-            debug.print(_blocks[i]);
+            debug.print(_blocks[i].address);
             debug.print( (i==0 || i%10) ? F("\t"):F("\n"));
         }
     }
@@ -105,8 +112,8 @@ void Blocks::scanResults(void){
 
 bool Blocks::slaveExists(byte address){
     bool found = false;
-    for( byte i = 0; i < sizeof(_blocks); i++ ){
-        if(_blocks[i] == address){
+    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+        if(_blocks[i].address == address){
             found = true;
         }
     }
@@ -136,16 +143,18 @@ void Blocks::enable_slaves(void){
 
 void Blocks::disable_slaves(void){
     digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
-    memset(_blocks,0,sizeof(_blocks));
+    //memset(_blocks,0,SLAVES_COUNT);
+    _empty_blocks();
     delay(300);
 }
 
 
 void Blocks::open_gate(byte address){
+    debug.print(address);
     if(!slaveExists(address)){
-        debug.print(address);
         debug.println(F(": Doesn't exists."));
     }else{
+        debug.println(F(": Opening."));
         Wire.beginTransmission(address);
         Wire.write(1);        // RegAddress
         Wire.write(1);        // Value
@@ -155,10 +164,11 @@ void Blocks::open_gate(byte address){
 
 
 void Blocks::close_gate(byte address){
+    debug.print(address);
     if(!slaveExists(address)){
-        debug.print(address);
         debug.println(F(": Doesn't exists."));
     }else{
+        debug.println(F(": Closing."));
         Wire.beginTransmission(address);
         Wire.write(1);        // RegAddress
         Wire.write(0);        // Value
@@ -167,21 +177,21 @@ void Blocks::close_gate(byte address){
 }
 
 
-void Blocks::flash_led(byte address){
+void Blocks::flash_led(byte address, byte mode){
     if(!slaveExists(address)){
         debug.println(address);
         debug.println(F(": Doesn't exists."));
     }else{
         Wire.beginTransmission(address);
         Wire.write(2);        // RegAddress
-        Wire.write(7);        // Value
+        Wire.write(mode);     // Value
         Wire.endTransmission();
     }
 }
 
 
 void Blocks::read_status(byte address){
-    debug.println(F("\nSlave Status Start -----------------------------"));
+    debug.println(F("Slave Status Start -----------------------------"));
     debug.println(address);
 
     if(!slaveExists(address)){

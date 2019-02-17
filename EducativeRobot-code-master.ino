@@ -12,13 +12,14 @@ void help(){
   debug.println(F("M: Show list of slaves found"));
   debug.println(F("D: Disable all slaves"));
   debug.println(F("R<addr>: Read the buffer status of slave on <addr> address"));
-  debug.println(F("L<addr>: Flash the onboard led of slave on <addr> address"));
+  debug.println(F("L<addr>,<mode>: Onboard led of slave on <addr> address. Modes: 0->off, 1->on, 2->blink"));
   debug.println(F("O<addr>: Activate the child slave of the slave on <addr> address"));
   debug.println(F("C<addr>: Deactivate all the children slaves of the slave on <addr> address"));
 }
 
 void process_serial(){
   char cmd = Serial.read();
+  byte address;
   if (cmd > 'Z') cmd -= 32;
   switch (cmd) {
     case 'H': help(); break;
@@ -26,16 +27,21 @@ void process_serial(){
     case 'M': blocks.scanResults(); break;
     case 'D': blocks.disable_slaves(); break;
     case 'L': 
-        blocks.flash_led(Serial.parseInt()); 
+        address = Serial.parseInt();
+        byte mode = Serial.parseInt();
+        blocks.flash_led(address, mode); 
         break;
     case 'O': 
-        blocks.open_gate(Serial.parseInt()); 
+        address = Serial.parseInt();
+        blocks.open_gate(address); 
         break;
     case 'C': 
-        blocks.close_gate(Serial.parseInt()); 
+        address = Serial.parseInt();
+        blocks.close_gate(address); 
         break;
     case 'R': 
-        blocks.read_status(Serial.parseInt()); 
+        address = Serial.parseInt();
+        blocks.read_status(address); 
         break;
   }
   
