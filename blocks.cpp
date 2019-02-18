@@ -35,16 +35,17 @@ void Blocks::scanI2CDevices(void){
 
     bool _finding = true;
     bool _finding_modifier = true;
-    uint8_t _discovered = 1;
     byte _rc = 1;
     byte _data = 0;
     //memset(_blocks,0,SLAVES_COUNT);
     _empty_blocks();
     byte _block_address = SLAVE_START_ADDRESS;
     byte _block_position = 0;
+    byte _block_modifier_position = 0;
     while(_finding){
         // @TODO: make it recursive
         _finding_modifier = true;
+        _block_modifier_position = 0;
         while(_finding_modifier){
             _finding_modifier = false;
             _rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &_data, 0, 1, 0);
@@ -55,18 +56,24 @@ void Blocks::scanI2CDevices(void){
                 add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
                 delay(600);
                 // If modifier was activated successfully, open its gate
-                if(read_state(_block_address, 3)){
-                    _blocks[_block_position].address = _block_address;
+                if(read_state(_block_address, SLAVE_STATE_ACTIVATED)){
+                    _blocks[_block_position].modifiers[_block_modifier_position].address = _block_address;
+                    _blocks[_block_position].modifiers[_block_modifier_position].type = read_state(_block_address, SLAVE_STATE_FUNCTION);
+                    _blocks[_block_position].modifiers[_block_modifier_position].value = read_state(_block_address, SLAVE_STATE_VALUE);
                     open_gate(_block_address);
                     delay(300);
+                    flash_led(_blocks[_block_position].modifiers[_block_modifier_position].address,1);
                 
                     _finding_modifier = true;
-                    _block_position++;
+                    _block_modifier_position++;
                     _block_address++;
                 }
             }
         }
 
+        if(_blocks[0].address){
+            _block_position++;
+        }
         _finding = false;
         _rc = twi_writeTo(SLAVE_ADDRESS, &_data, 0, 1, 0);
         if(_rc == 0){       // Block found
@@ -77,20 +84,37 @@ void Blocks::scanI2CDevices(void){
             add_slave(SLAVE_ADDRESS, _block_address);
             delay(600);
             // If slave was activated successfully, open its gate
-            if(read_state(_block_address, 3)){
+            if(read_state(_block_address, SLAVE_STATE_ACTIVATED)){
                 _blocks[_block_position].address = _block_address;
+                _blocks[_block_position].type = read_state(_block_address, SLAVE_STATE_FUNCTION);
+                _blocks[_block_position].value = read_state(_block_address, SLAVE_STATE_VALUE);
                 open_gate(_block_address);
                 delay(300);
+                flash_led(_blocks[_block_position].address,1);
 
                 _finding = true;
-                _block_position++;
                 _block_address++;
             }
         }
     }
 
     scanResults();
+    delay(1000);
+    off_leds();
+}
 
+
+void Blocks::off_leds(){
+    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+        if(_blocks[i].address){
+            flash_led(_blocks[i].address,0);
+            for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
+                if(_blocks[i].modifiers[j].address){
+                    flash_led(_blocks[i].modifiers[j].address,0);
+                }
+            }
+        }
+    }
 }
 
 
@@ -100,8 +124,15 @@ void Blocks::scanResults(void){
         if(_blocks[i].address){
             debug.print(i);
             debug.print(F(": "));
-            debug.print(_blocks[i].address);
-            debug.print( (i==0 || i%10) ? F("\t"):F("\n"));
+            debug.println(_blocks[i].address);
+            for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
+                if(_blocks[i].modifiers[j].address){
+                    debug.print(F("\t\t"));
+                    debug.print(j);
+                    debug.print(F(": "));
+                    debug.println(_blocks[i].modifiers[j].address);
+                }
+            }
         }
     }
     debug.println(F("\nScanning finished\n"));
@@ -126,8 +157,8 @@ void Blocks::add_slave(const byte old_address, byte address){
       debug.println(F(": Doesn't exists."));
   }else{*/
     Wire.beginTransmission(old_address);
-    Wire.write(0);        // RegAddress
-    Wire.write(address);  // Value
+    Wire.write(SLAVE_STATE_ADDRESS);        // RegAddress
+    Wire.write(address);                    // Value
     Wire.endTransmission();
   //}
 }
@@ -154,8 +185,8 @@ void Blocks::open_gate(byte address){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(1);        // RegAddress
-        Wire.write(1);        // Value
+        Wire.write(SLAVE_STATE_GATE);   // RegAddress
+        Wire.write(1);                  // Value
         Wire.endTransmission();
     //}
 }
@@ -168,23 +199,21 @@ void Blocks::close_gate(byte address){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(1);        // RegAddress
-        Wire.write(0);        // Value
+        Wire.write(SLAVE_STATE_GATE);   // RegAddress
+        Wire.write(0);                  // Value
         Wire.endTransmission();
     //}
 }
 
 
 void Blocks::flash_led(byte address, byte mode){
-    debug.print(address);
-    debug.println(F(": Led change."));
     /*if(!slaveExists(address)){
         debug.println(address);
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(2);        // RegAddress
-        Wire.write(mode);     // Value
+        Wire.write(SLAVE_STATE_LED);    // RegAddress
+        Wire.write(mode);               // Value
         Wire.endTransmission();
     //}
 }

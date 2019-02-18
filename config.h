@@ -25,6 +25,14 @@
 #define SLAVE_LEFT_ARROW            2
 #define SLAVE_RIGHT_ARROW           3
 
+// SLAVE STATES
+#define SLAVE_STATE_ADDRESS         0
+#define SLAVE_STATE_GATE            1
+#define SLAVE_STATE_LED             2
+#define SLAVE_STATE_ACTIVATED       3
+#define SLAVE_STATE_FUNCTION        4
+#define SLAVE_STATE_VALUE           5
+
 // GENERAL
 #define DEBUG                       true
 #define SILENT                      false

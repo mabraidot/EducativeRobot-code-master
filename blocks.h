@@ -10,6 +10,7 @@ class Blocks {
         void init(void);
         void scanI2CDevices(void);
         void scanResults(void);
+        void off_leds();
         bool slaveExists(byte address);
 
         void add_slave(const byte old_address, byte address);
@@ -33,6 +34,7 @@ class Blocks {
         typedef struct {
             byte address;
             byte type;
+            byte value;
             _functionModifier modifiers[FUNCTION_MODIFIERS_COUNT];
         } _functionBlock;
 
@@ -47,11 +49,11 @@ class Blocks {
         typedef struct {
             byte address;
             byte type;
+            byte value;
             _slaveModifier modifiers[SLAVES_MODIFIERS_COUNT];
         } _slaveBlock;
 
         _slaveBlock _blocks[SLAVES_COUNT];
-        //byte _blocks[128]        = {0};
 
         void _empty_blocks(void);
 

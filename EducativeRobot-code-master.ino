@@ -1,6 +1,7 @@
 #include "config.h"
 #include "debug.h"
 #include "blocks.h"
+#include "compiler.h"
 
 
 void process_serial(){
@@ -72,6 +73,7 @@ void setup()
   Serial.begin(115200);
 
   blocks.init();
+  compiler.init();
   
   // wait for slave to finish any init sequence
   delay(2000);
