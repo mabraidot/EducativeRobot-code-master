@@ -24,7 +24,12 @@ void Blocks::init(void){
 
 
 void Blocks::_empty_blocks(void){
-    memset(_blocks,0,SLAVES_COUNT);
+    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+        for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
+            _blocks[i].modifiers[j] = {};
+        }
+        _blocks[i] = {};
+    }
 }
 
 
