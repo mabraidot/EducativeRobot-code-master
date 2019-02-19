@@ -11,28 +11,38 @@
 // I2C
 #define SLAVE_ADDRESS               0x01
 #define SLAVE_MODIFIER_ADDRESS      0x02
-#define FUNCTION_ADDRESS            0x03
 #define SLAVE_START_ADDRESS         10
 
-#define SLAVES_COUNT                50
-#define SLAVES_MODIFIERS_COUNT      5
+#define SLAVES_COUNT                40
+#define SLAVES_MODIFIERS_COUNT      3
 #define FUNCTION_COUNT              10
-#define FUNCTION_MODIFIERS_COUNT    5
+#define FUNCTION_MODIFIERS_COUNT    3
 
-// SLAVE FUNCTIONS
-#define MODIFIER_LOOP               1
-#define SLAVE_FORWARD_ARROW         2
-#define SLAVE_LEFT_ARROW            2
-#define SLAVE_RIGHT_ARROW           3
+// SLAVE MODES
+#define MODE_MODIFIER_LOOP          1
+#define MODE_SLAVE_FORWARD_ARROW    2
+#define MODE_SLAVE_LEFT_ARROW       2
+#define MODE_SLAVE_RIGHT_ARROW      3
+#define MODE_FUNCTION               4
 
 // SLAVE STATES
-#define SLAVE_STATE_ADDRESS         0
-#define SLAVE_STATE_GATE            1
-#define SLAVE_STATE_LED             2
-#define SLAVE_STATE_ACTIVATED       3
-#define SLAVE_STATE_FUNCTION        4
-#define SLAVE_STATE_VALUE           5
+#define STATE_ADDRESS               0
+#define STATE_GATE                  1
+
+#define STATE_LED                   2
+#define STATE_LED_OFF               0
+#define STATE_LED_ON                1
+#define STATE_LED_BLINK             2
+
+#define STATE_ACTIVATED             3
+#define STATE_FUNCTION              4
+#define STATE_VALUE                 5
+
 
 // GENERAL
 #define DEBUG                       true
 #define SILENT                      false
+// Button Debouncing (Kenneth A. Kuhn algorithm)
+#define DEBOUNCE_TIME               0.3
+#define DEBOUNCE_SAMPLE_FREQUENCY   10
+#define DEBOUNCE_MAXIMUM            (DEBOUNCE_TIME * DEBOUNCE_SAMPLE_FREQUENCY)

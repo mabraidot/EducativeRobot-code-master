@@ -7,8 +7,6 @@ extern "C" {
 #include "debug.h"
 #include "blocks.h"
 
-Blocks blocks;
-
 
 void Blocks::init(void){
 
@@ -23,7 +21,13 @@ void Blocks::init(void){
 }
 
 
-void Blocks::_empty_blocks(void){
+void Blocks::empty_blocks(void){
+    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+        for( byte j = 0; j < FUNCTION_MODIFIERS_COUNT; j++ ){
+            _functions[i].modifiers[j] = {};
+        }
+        _functions[i] = {};
+    }
     for( byte i = 0; i < SLAVES_COUNT; i++ ){
         for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
             _blocks[i].modifiers[j] = {};
@@ -33,7 +37,7 @@ void Blocks::_empty_blocks(void){
 }
 
 
-void Blocks::scanI2CDevices(void){
+/*void Blocks::scanI2CDevices(void){
 
     disable_slaves();
     enable_slaves();
@@ -43,7 +47,7 @@ void Blocks::scanI2CDevices(void){
     byte _rc = 1;
     byte _data = 0;
     //memset(_blocks,0,SLAVES_COUNT);
-    _empty_blocks();
+    empty_blocks();
     byte _block_address = SLAVE_START_ADDRESS;
     byte _block_position = 0;
     byte _block_modifier_position = 0;
@@ -61,13 +65,13 @@ void Blocks::scanI2CDevices(void){
                 add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
                 delay(600);
                 // If modifier was activated successfully, open its gate
-                if(read_state(_block_address, SLAVE_STATE_ACTIVATED)){
+                if(read_state(_block_address, STATE_ACTIVATED)){
                     _blocks[_block_position].modifiers[_block_modifier_position].address = _block_address;
-                    _blocks[_block_position].modifiers[_block_modifier_position].type = read_state(_block_address, SLAVE_STATE_FUNCTION);
-                    _blocks[_block_position].modifiers[_block_modifier_position].value = read_state(_block_address, SLAVE_STATE_VALUE);
+                    _blocks[_block_position].modifiers[_block_modifier_position].type = read_state(_block_address, STATE_FUNCTION);
+                    _blocks[_block_position].modifiers[_block_modifier_position].value = read_state(_block_address, STATE_VALUE);
                     open_gate(_block_address);
                     delay(300);
-                    flash_led(_blocks[_block_position].modifiers[_block_modifier_position].address,1);
+                    flash_led(_blocks[_block_position].modifiers[_block_modifier_position].address,STATE_LED_ON);
                 
                     _finding_modifier = true;
                     _block_modifier_position++;
@@ -89,13 +93,13 @@ void Blocks::scanI2CDevices(void){
             add_slave(SLAVE_ADDRESS, _block_address);
             delay(600);
             // If slave was activated successfully, open its gate
-            if(read_state(_block_address, SLAVE_STATE_ACTIVATED)){
+            if(read_state(_block_address, STATE_ACTIVATED)){
                 _blocks[_block_position].address = _block_address;
-                _blocks[_block_position].type = read_state(_block_address, SLAVE_STATE_FUNCTION);
-                _blocks[_block_position].value = read_state(_block_address, SLAVE_STATE_VALUE);
+                _blocks[_block_position].type = read_state(_block_address, STATE_FUNCTION);
+                _blocks[_block_position].value = read_state(_block_address, STATE_VALUE);
                 open_gate(_block_address);
                 delay(300);
-                flash_led(_blocks[_block_position].address,1);
+                flash_led(_blocks[_block_position].address,STATE_LED_ON);
 
                 _finding = true;
                 _block_address++;
@@ -107,15 +111,25 @@ void Blocks::scanI2CDevices(void){
     delay(1000);
     off_leds();
 }
-
+*/
 
 void Blocks::off_leds(){
+    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+        if(_functions[i].address){
+            flash_led(_functions[i].address,STATE_LED_OFF);
+            for( byte j = 0; j < FUNCTION_MODIFIERS_COUNT; j++ ){
+                if(_functions[i].modifiers[j].address){
+                    flash_led(_functions[i].modifiers[j].address,STATE_LED_OFF);
+                }
+            }
+        }
+    }
     for( byte i = 0; i < SLAVES_COUNT; i++ ){
         if(_blocks[i].address){
-            flash_led(_blocks[i].address,0);
+            flash_led(_blocks[i].address,STATE_LED_OFF);
             for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
                 if(_blocks[i].modifiers[j].address){
-                    flash_led(_blocks[i].modifiers[j].address,0);
+                    flash_led(_blocks[i].modifiers[j].address,STATE_LED_OFF);
                 }
             }
         }
@@ -125,6 +139,23 @@ void Blocks::off_leds(){
 
 void Blocks::scanResults(void){
     debug.println(F("\nScanning I2C bus..."));
+    debug.println(F("FUNCTION"));
+    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+        if(_functions[i].address){
+            debug.print(i);
+            debug.print(F(": "));
+            debug.println(_functions[i].address);
+            for( byte j = 0; j < FUNCTION_MODIFIERS_COUNT; j++ ){
+                if(_functions[i].modifiers[j].address){
+                    debug.print(F("\t\t"));
+                    debug.print(j);
+                    debug.print(F(": "));
+                    debug.println(_functions[i].modifiers[j].address);
+                }
+            }
+        }
+    }
+    debug.println(F("SLAVES"));
     for( byte i = 0; i < SLAVES_COUNT; i++ ){
         if(_blocks[i].address){
             debug.print(i);
@@ -146,6 +177,11 @@ void Blocks::scanResults(void){
 
 bool Blocks::slaveExists(byte address){
     bool found = false;
+    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+        if(_functions[i].address == address){
+            found = true;
+        }
+    }
     for( byte i = 0; i < SLAVES_COUNT; i++ ){
         if(_blocks[i].address == address){
             found = true;
@@ -162,7 +198,7 @@ void Blocks::add_slave(const byte old_address, byte address){
       debug.println(F(": Doesn't exists."));
   }else{*/
     Wire.beginTransmission(old_address);
-    Wire.write(SLAVE_STATE_ADDRESS);        // RegAddress
+    Wire.write(STATE_ADDRESS);        // RegAddress
     Wire.write(address);                    // Value
     Wire.endTransmission();
   //}
@@ -177,8 +213,19 @@ void Blocks::enable_slaves(void){
 
 void Blocks::disable_slaves(void){
     digitalWrite(SLAVE_ACTIVATE_PIN, LOW);
-    //memset(_blocks,0,SLAVES_COUNT);
-    _empty_blocks();
+    empty_blocks();
+    delay(300);
+}
+
+void Blocks::enable_function(void){
+    digitalWrite(FUNCTION_ACTIVATE_PIN, HIGH);
+    delay(300);
+}
+
+
+void Blocks::disable_function(void){
+    digitalWrite(FUNCTION_ACTIVATE_PIN, LOW);
+    empty_blocks();
     delay(300);
 }
 
@@ -190,7 +237,7 @@ void Blocks::open_gate(byte address){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(SLAVE_STATE_GATE);   // RegAddress
+        Wire.write(STATE_GATE);   // RegAddress
         Wire.write(1);                  // Value
         Wire.endTransmission();
     //}
@@ -204,7 +251,7 @@ void Blocks::close_gate(byte address){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(SLAVE_STATE_GATE);   // RegAddress
+        Wire.write(STATE_GATE);   // RegAddress
         Wire.write(0);                  // Value
         Wire.endTransmission();
     //}
@@ -217,7 +264,7 @@ void Blocks::flash_led(byte address, byte mode){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(SLAVE_STATE_LED);    // RegAddress
+        Wire.write(STATE_LED);    // RegAddress
         Wire.write(mode);               // Value
         Wire.endTransmission();
     //}
@@ -256,11 +303,11 @@ uint8_t Blocks::read_state(byte address, byte reg){
         }
     }
 
-    debug.println(F("\nReg State Start -----------------------------"));
+    /*debug.println(F("\nReg State Start -----------------------------"));
     debug.print(reg);
     debug.print(F("\t"));
     debug.print(_status[reg]);
     debug.println(F("\nReg State End -------------------------------\n"));
-
+    */
     return _status[reg];
 }

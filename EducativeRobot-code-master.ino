@@ -3,6 +3,8 @@
 #include "blocks.h"
 #include "compiler.h"
 
+Blocks blocks;
+Compiler compiler;
 
 void process_serial(){
   char cmd = Serial.read();
@@ -10,9 +12,15 @@ void process_serial(){
   if (cmd > 'Z') cmd -= 32;
   switch (cmd) {
     case 'H': help(); break;
-    case 'S': blocks.scanI2CDevices(); break;
+    //case 'S': blocks.scanI2CDevices(); break;
+    case 'S': compiler.run(); break;
     case 'M': blocks.scanResults(); break;
-    case 'D': blocks.disable_slaves(); break;
+    case 'D': 
+        {
+            blocks.disable_slaves(); 
+            blocks.disable_function(); 
+        }
+        break;
     case 'L': 
         {
             address = Serial.parseInt();
@@ -82,7 +90,12 @@ void setup()
 
 void loop()
 {
+    if (Serial.available()) process_serial();
 
-  if (Serial.available()) process_serial();
-
+    if (compiler.readRunButton()){
+        compiler.run();
+    }
+    if (compiler.readStepsButton()){
+        compiler.runSteps();
+    }
 }

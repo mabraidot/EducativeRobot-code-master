@@ -8,6 +8,7 @@ class Blocks {
         Blocks() {};
 
         void init(void);
+        void empty_blocks(void);
         void scanI2CDevices(void);
         void scanResults(void);
         void off_leds();
@@ -16,14 +17,14 @@ class Blocks {
         void add_slave(const byte old_address, byte address);
         void enable_slaves(void);
         void disable_slaves(void);
+        void enable_function(void);
+        void disable_function(void);
 
         void open_gate(byte address);
         void close_gate(byte address);
         void flash_led(byte address, byte mode);
         void read_status(byte address);
         uint8_t read_state(byte address, byte reg);
-
-    private:
 
         typedef struct {
             byte address;
@@ -54,8 +55,6 @@ class Blocks {
         } _slaveBlock;
 
         _slaveBlock _blocks[SLAVES_COUNT];
-
-        void _empty_blocks(void);
 
         /**
          * Array of state values from slaves
