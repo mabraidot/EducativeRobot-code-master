@@ -9,7 +9,6 @@ class Blocks {
 
         void init(void);
         void empty_blocks(void);
-        void scanI2CDevices(void);
         void scanResults(void);
         void off_leds();
         bool slaveExists(byte address);

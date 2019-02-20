@@ -1,8 +1,5 @@
 #include <Arduino.h>
 #include <Wire.h>
-extern "C" {
-  #include "utility/twi.h"
-}
 #include "config.h"
 #include "debug.h"
 #include "blocks.h"
@@ -36,82 +33,6 @@ void Blocks::empty_blocks(void){
     }
 }
 
-
-/*void Blocks::scanI2CDevices(void){
-
-    disable_slaves();
-    enable_slaves();
-
-    bool _finding = true;
-    bool _finding_modifier = true;
-    byte _rc = 1;
-    byte _data = 0;
-    //memset(_blocks,0,SLAVES_COUNT);
-    empty_blocks();
-    byte _block_address = SLAVE_START_ADDRESS;
-    byte _block_position = 0;
-    byte _block_modifier_position = 0;
-    while(_finding){
-        // @TODO: make it recursive
-        _finding_modifier = true;
-        _block_modifier_position = 0;
-        while(_finding_modifier){
-            _finding_modifier = false;
-            _rc = twi_writeTo(SLAVE_MODIFIER_ADDRESS, &_data, 0, 1, 0);
-            if(_rc == 0){       // Block found
-                //give it an address
-                debug.println(_block_address);
-                debug.println(F("Adding slave modifier ..."));
-                add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
-                delay(600);
-                // If modifier was activated successfully, open its gate
-                if(read_state(_block_address, STATE_ACTIVATED)){
-                    _blocks[_block_position].modifiers[_block_modifier_position].address = _block_address;
-                    _blocks[_block_position].modifiers[_block_modifier_position].type = read_state(_block_address, STATE_FUNCTION);
-                    _blocks[_block_position].modifiers[_block_modifier_position].value = read_state(_block_address, STATE_VALUE);
-                    open_gate(_block_address);
-                    delay(300);
-                    flash_led(_blocks[_block_position].modifiers[_block_modifier_position].address,STATE_LED_ON);
-                
-                    _finding_modifier = true;
-                    _block_modifier_position++;
-                    _block_address++;
-                }
-            }
-        }
-
-        if(_blocks[0].address){
-            _block_position++;
-        }
-        _finding = false;
-        _rc = twi_writeTo(SLAVE_ADDRESS, &_data, 0, 1, 0);
-        if(_rc == 0){       // Block found
-            //give it an address
-            debug.println(_block_address);
-            debug.println(F("Adding slave ..."));
-
-            add_slave(SLAVE_ADDRESS, _block_address);
-            delay(600);
-            // If slave was activated successfully, open its gate
-            if(read_state(_block_address, STATE_ACTIVATED)){
-                _blocks[_block_position].address = _block_address;
-                _blocks[_block_position].type = read_state(_block_address, STATE_FUNCTION);
-                _blocks[_block_position].value = read_state(_block_address, STATE_VALUE);
-                open_gate(_block_address);
-                delay(300);
-                flash_led(_blocks[_block_position].address,STATE_LED_ON);
-
-                _finding = true;
-                _block_address++;
-            }
-        }
-    }
-
-    scanResults();
-    delay(1000);
-    off_leds();
-}
-*/
 
 void Blocks::off_leds(){
     for( byte i = 0; i < FUNCTION_COUNT; i++ ){

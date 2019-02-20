@@ -92,10 +92,7 @@ void loop()
 {
     if (Serial.available()) process_serial();
 
-    if (compiler.readRunButton()){
-        compiler.run();
-    }
-    if (compiler.readStepsButton()){
-        compiler.runSteps();
-    }
+    compiler.run();
+    compiler.runSteps();
+    
 }
