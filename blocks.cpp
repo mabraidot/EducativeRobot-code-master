@@ -19,14 +19,14 @@ void Blocks::init(void){
 
 
 void Blocks::empty_blocks(void){
-    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
-        for( byte j = 0; j < FUNCTION_MODIFIERS_COUNT; j++ ){
+    for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
+        for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
             _functions[i].modifiers[j] = {};
         }
         _functions[i] = {};
     }
-    for( byte i = 0; i < SLAVES_COUNT; i++ ){
-        for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
+    for( byte i = 1; i <= SLAVES_COUNT; i++ ){
+        for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
             _blocks[i].modifiers[j] = {};
         }
         _blocks[i] = {};
@@ -35,20 +35,20 @@ void Blocks::empty_blocks(void){
 
 
 void Blocks::off_leds(){
-    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+    for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
         if(_functions[i].address){
             flash_led(_functions[i].address,STATE_LED_OFF);
-            for( byte j = 0; j < FUNCTION_MODIFIERS_COUNT; j++ ){
+            for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
                 if(_functions[i].modifiers[j].address){
                     flash_led(_functions[i].modifiers[j].address,STATE_LED_OFF);
                 }
             }
         }
     }
-    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+    for( byte i = 1; i <= SLAVES_COUNT; i++ ){
         if(_blocks[i].address){
             flash_led(_blocks[i].address,STATE_LED_OFF);
-            for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
+            for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
                 if(_blocks[i].modifiers[j].address){
                     flash_led(_blocks[i].modifiers[j].address,STATE_LED_OFF);
                 }
@@ -61,12 +61,12 @@ void Blocks::off_leds(){
 void Blocks::scanResults(void){
     debug.println(F("\nScanning I2C bus..."));
     debug.println(F("FUNCTION"));
-    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+    for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
         if(_functions[i].address){
             debug.print(i);
             debug.print(F(": "));
             debug.println(_functions[i].address);
-            for( byte j = 0; j < FUNCTION_MODIFIERS_COUNT; j++ ){
+            for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
                 if(_functions[i].modifiers[j].address){
                     debug.print(F("\t\t"));
                     debug.print(j);
@@ -77,12 +77,12 @@ void Blocks::scanResults(void){
         }
     }
     debug.println(F("SLAVES"));
-    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+    for( byte i = 1; i <= SLAVES_COUNT; i++ ){
         if(_blocks[i].address){
             debug.print(i);
             debug.print(F(": "));
             debug.println(_blocks[i].address);
-            for( byte j = 0; j < SLAVES_MODIFIERS_COUNT; j++ ){
+            for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
                 if(_blocks[i].modifiers[j].address){
                     debug.print(F("\t\t"));
                     debug.print(j);
@@ -98,12 +98,12 @@ void Blocks::scanResults(void){
 
 bool Blocks::slaveExists(byte address){
     bool found = false;
-    for( byte i = 0; i < FUNCTION_COUNT; i++ ){
+    for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
         if(_functions[i].address == address){
             found = true;
         }
     }
-    for( byte i = 0; i < SLAVES_COUNT; i++ ){
+    for( byte i = 1; i <= SLAVES_COUNT; i++ ){
         if(_blocks[i].address == address){
             found = true;
         }
@@ -223,12 +223,5 @@ uint8_t Blocks::read_state(byte address, byte reg){
             _status[j] = Wire.read();
         }
     }
-
-    /*debug.println(F("\nReg State Start -----------------------------"));
-    debug.print(reg);
-    debug.print(F("\t"));
-    debug.print(_status[reg]);
-    debug.println(F("\nReg State End -------------------------------\n"));
-    */
     return _status[reg];
 }

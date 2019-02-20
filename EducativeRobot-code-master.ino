@@ -93,6 +93,5 @@ void loop()
     if (Serial.available()) process_serial();
 
     compiler.run();
-    compiler.runSteps();
     
 }

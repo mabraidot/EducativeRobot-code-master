@@ -35,10 +35,10 @@ class Blocks {
             byte address;
             byte type;
             byte value;
-            _functionModifier modifiers[FUNCTION_MODIFIERS_COUNT];
+            _functionModifier modifiers[FUNCTION_MODIFIERS_COUNT+1];
         } _functionBlock;
 
-        _functionBlock _functions[FUNCTION_COUNT];
+        _functionBlock _functions[FUNCTION_COUNT+1]; // 1-indexed
 
         typedef struct {
             byte address;
@@ -50,10 +50,10 @@ class Blocks {
             byte address;
             byte type;
             byte value;
-            _slaveModifier modifiers[SLAVES_MODIFIERS_COUNT];
+            _slaveModifier modifiers[SLAVES_MODIFIERS_COUNT+1];
         } _slaveBlock;
 
-        _slaveBlock _blocks[SLAVES_COUNT];
+        _slaveBlock _blocks[SLAVES_COUNT+1]; // 1-indexed
 
         /**
          * Array of state values from slaves
