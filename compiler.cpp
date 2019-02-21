@@ -17,18 +17,27 @@ void Compiler::init(void){
 
 
 void Compiler::run(void){
-    // @TODO: read i2c and start program
-
+    
     // Step by step run
     if(digitalRead(STEPS_BUTTON) == LOW){
-        digitalWrite(STEPS_LED, HIGH);
-        _scanBlocks();
-        digitalWrite(STEPS_LED, LOW);
+        if(!_compiled){
+            _steps_flag = true;
+            digitalWrite(STEPS_LED, HIGH);
+            _scanBlocks();
+            digitalWrite(STEPS_LED, LOW);
+        }else{
+            _steps_run_flag = true;
+
+            // DEMO
+            blink_timeout = millis() + blink_interval;
+        }
     }
 
     if(!_compiled){
         // One step run
         if(digitalRead(RUN_BUTTON) == LOW){
+            _steps_flag = false;
+            _steps_run_flag = false;
             digitalWrite(RUN_LED, HIGH);
             _scanBlocks();
             digitalWrite(RUN_LED, LOW);
@@ -49,9 +58,13 @@ void Compiler::run(void){
                 _compiled = false;
                 _queue = 0;
                 _queue_temp = 0;
+                _steps_flag = false;
+                _steps_run_flag = false;
             }
         }else{
-            _execute();
+            if(!_steps_flag || _steps_run_flag){
+                _execute();
+            }
         }
     }
 
@@ -74,20 +87,18 @@ boolean Compiler::_next(void){
                 _queue_temp = _queue;
                 _queue = 0;
                 _function_flag = true;
-                _busy = false;
-            }else{
-                _busy = true;
             }
+            _busy = true;
+
             return true;
     }else{
         if(_function_flag){
             _function_flag = false;
             _queue = _queue_temp;
-            _busy = true;
+            _busy = false;
+
             return true;
         }else{
-            _queue = 0;
-            _queue_temp = 0;
             return false;
         }
     }
@@ -102,35 +113,57 @@ void Compiler::_execute(void){
     }else{
         current_address = blocks._blocks[_queue].address;
     }
-    if(!current_address){
+
+
+    if(!current_address || (_queue_temp == _queue && !_function_flag)){
+        _busy = false;
+        _steps_run_flag = false;
         return;
     }
     
 
     
     /***** DEMO *******/
+
+    /***************************************************/
+    // Switch off the led on function call block
+    if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
+        if(blocks.read_state(blocks._blocks[_queue_temp].address, STATE_LED) != STATE_LED_ON){
+            blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_ON);
+            debug.print(F("Executing function call: "));
+            debug.println(blocks._blocks[_queue_temp].address);
+        }
+    }
+    /***************************************************/
+
+    // Block execution
     if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
         blocks.flash_led(current_address, STATE_LED_BLINK);
     }
     if(blink_timeout < millis()){
-        debug.print(F("Just executed: "));
+        if(_function_flag){
+            debug.print(F("Executed function: "));
+        }else{
+            debug.print(F("Executed: "));
+        }
         debug.println(current_address);
     
         blocks.flash_led(current_address, STATE_LED_OFF);
         blink_timeout = millis() + blink_interval;
 
         _busy = false;
+        _steps_run_flag = false;
+
+        /***************************************************/
+        // Switch off the led on function call block
+        if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
+            blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
+        }
+        /***************************************************/
+
     }
     /***** END DEMO *******/
-        
-    
-    if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].type == MODE_FUNCTION){
-        blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_ON);
-    }
-    if(_queue_temp && !_function_flag){
-        blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
-        //_busy = false;
-    }
+   
     
 }
 
