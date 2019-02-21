@@ -48,6 +48,7 @@ void Compiler::run(void){
             _steps_run_flag = false;
             _led(RUN_LED, STATE_LED_ON);
             _scanBlocks();
+            delay(600);
         }
 
         
@@ -67,6 +68,8 @@ void Compiler::run(void){
                 _queue_temp = 0;
                 _steps_flag = false;
                 _steps_run_flag = false;
+                blocks.disable_function();
+                blocks.disable_slaves();
             }
         }else{
             if(!_steps_flag || _steps_run_flag){
@@ -155,7 +158,8 @@ void Compiler::_execute(void){
         }
         debug.println(current_address);
     
-        blocks.flash_led(current_address, STATE_LED_OFF);
+        //blocks.flash_led(current_address, STATE_LED_OFF);
+        blocks.flash_led(current_address, STATE_LED_ON);
         blink_timeout = millis() + blink_interval;
 
         _busy = false;
@@ -164,7 +168,7 @@ void Compiler::_execute(void){
         /***************************************************/
         // Switch off the led on function call block
         if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
-            blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
+            //blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
         }
         /***************************************************/
 
