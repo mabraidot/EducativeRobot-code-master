@@ -30,6 +30,7 @@ class Compiler {
 
         boolean _next(void);
         void _execute(void);
+        void _led(byte pin, byte mode);
 
 };
 

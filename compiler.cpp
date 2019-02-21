@@ -22,15 +22,23 @@ void Compiler::run(void){
     if(digitalRead(STEPS_BUTTON) == LOW){
         if(!_compiled){
             _steps_flag = true;
-            digitalWrite(STEPS_LED, HIGH);
+            _led(STEPS_LED, STATE_LED_ON);
             _scanBlocks();
-            digitalWrite(STEPS_LED, LOW);
+            _led(STEPS_LED, STATE_LED_OFF);
         }else{
             _steps_run_flag = true;
+            _led(STEPS_LED, STATE_LED_ON);
 
             // DEMO
             blink_timeout = millis() + blink_interval;
         }
+    }
+
+    if(_compiled && _steps_flag && !_steps_run_flag){
+        _led(STEPS_LED, STATE_LED_BLINK);
+    }else if(!_compiled){
+        _led(RUN_LED, STATE_LED_OFF);
+        _led(STEPS_LED, STATE_LED_OFF);
     }
 
     if(!_compiled){
@@ -38,9 +46,8 @@ void Compiler::run(void){
         if(digitalRead(RUN_BUTTON) == LOW){
             _steps_flag = false;
             _steps_run_flag = false;
-            digitalWrite(RUN_LED, HIGH);
+            _led(RUN_LED, STATE_LED_ON);
             _scanBlocks();
-            digitalWrite(RUN_LED, LOW);
         }
 
         
@@ -281,4 +288,28 @@ void Compiler::_scanBlocks(void){
     blocks.off_leds();
 
     _compiled = true;
+}
+
+
+void Compiler::_led(byte pin, byte mode){
+  
+    // Blink
+    if(mode == STATE_LED_BLINK){
+        static byte led_on = 1;
+        static int _blink_interval = 500;
+        static unsigned long _blink_timeout = millis() + _blink_interval;
+
+        if(_blink_timeout < millis()){
+            led_on = !led_on;
+            _blink_timeout = millis() + _blink_interval;
+        }
+        digitalWrite(pin, led_on);
+    // On
+    }else if(mode == STATE_LED_ON){
+        digitalWrite(pin, 1);
+    // Off
+    }else{
+        digitalWrite(pin, 0);
+    }
+
 }
