@@ -19,6 +19,13 @@ void Compiler::init(void){
 void Compiler::run(void){
     // @TODO: read i2c and start program
 
+    // Step by step run
+    if(digitalRead(STEPS_BUTTON) == LOW){
+        digitalWrite(STEPS_LED, HIGH);
+        _scanBlocks();
+        digitalWrite(STEPS_LED, LOW);
+    }
+
     if(!_compiled){
         // One step run
         if(digitalRead(RUN_BUTTON) == LOW){
@@ -27,64 +34,25 @@ void Compiler::run(void){
             digitalWrite(RUN_LED, LOW);
         }
 
-        // Step by step run
-        if(digitalRead(STEPS_BUTTON) == LOW){
-            digitalWrite(STEPS_LED, HIGH);
-            _scanBlocks();
-            digitalWrite(STEPS_LED, LOW);
-        }
+        
     }else{
 
         // Run the program
         if(!_busy){
+            if(_next()){
+                
+                // DEMO
+                blink_timeout = millis() + blink_interval;
 
+            }else{
+                _busy = false;
+                _compiled = false;
+                _queue = 0;
+                _queue_temp = 0;
+            }
+        }else{
+            _execute();
         }
-        /*
-        if compiler not busy
-            load next block
-            if next was ok
-                set compiler busy
-            else
-                set compiler not busy
-                set _compiled false
-                clean index buffers
-        else
-            execute block
-
-        --Load next block index
-        determine if it is a function or normal block
-        if is any block left (function or normal)
-            if block is function call
-                set index temporarily to later continue there 
-                set inside function flag
-            set block index on queue
-            return true
-        else
-            if it is function block
-                clean inside function flag
-                return true
-            else
-                return false
-
-
-        --Execute block
-        load index from queue
-        if block exists
-            if is a function block
-                light on the led
-                set compiler not busy
-                return
-            execute block
-            if block has modifiers
-                ***?
-            if execution is over
-                if was a function call
-                    turn off the block function led
-                set compiler not busy
-            
-        */
-
-        _compiled = false;
     }
 
 }
@@ -95,13 +63,84 @@ void Compiler::run(void){
 /*--------------------------------------*/
 /*      PRIVATE FUNCTIONS               */
 /*--------------------------------------*/
+boolean Compiler::_next(void){
+    
+    _queue++;
+    
+    if((_function_flag && blocks._functions[_queue].address) 
+        || (!_function_flag && blocks._blocks[_queue].address)){
+
+            if(!_function_flag && blocks._blocks[_queue].type == MODE_FUNCTION){
+                _queue_temp = _queue;
+                _queue = 0;
+                _function_flag = true;
+                _busy = false;
+            }else{
+                _busy = true;
+            }
+            return true;
+    }else{
+        if(_function_flag){
+            _function_flag = false;
+            _queue = _queue_temp;
+            _busy = true;
+            return true;
+        }else{
+            _queue = 0;
+            _queue_temp = 0;
+            return false;
+        }
+    }
+}
+
+
+void Compiler::_execute(void){
+
+    byte current_address = 0;
+    if(_function_flag){
+        current_address = blocks._functions[_queue].address;
+    }else{
+        current_address = blocks._blocks[_queue].address;
+    }
+    if(!current_address){
+        return;
+    }
+    
+
+    
+    /***** DEMO *******/
+    if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
+        blocks.flash_led(current_address, STATE_LED_BLINK);
+    }
+    if(blink_timeout < millis()){
+        debug.print(F("Just executed: "));
+        debug.println(current_address);
+    
+        blocks.flash_led(current_address, STATE_LED_OFF);
+        blink_timeout = millis() + blink_interval;
+
+        _busy = false;
+    }
+    /***** END DEMO *******/
+        
+    
+    if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].type == MODE_FUNCTION){
+        blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_ON);
+    }
+    if(_queue_temp && !_function_flag){
+        blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
+        //_busy = false;
+    }
+    
+}
+
+
 boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte _block_address, byte _block_position, byte _block_modifier_position){
 
     debug.print(_block_address);
 
     if(_modifier_mode){
         debug.print((_function_mode) ? F("\tFUNCTION: Adding slave modifier ...\n") : F("\tBLOCKS: Adding slave modifier ...\n"));
-        debug.print(F("\tAdding slave modifier ...\n"));
         blocks.add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
         
         delay(1000);
