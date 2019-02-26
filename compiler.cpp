@@ -26,7 +26,7 @@ void Compiler::run(void){
             _scanBlocks();
             _led(STEPS_LED, STATE_LED_OFF);
         }else{
-            _steps_run_flag = true;
+            _steps_busy = true;
             _led(STEPS_LED, STATE_LED_ON);
 
             // DEMO
@@ -34,7 +34,7 @@ void Compiler::run(void){
         }
     }
 
-    if(_compiled && _steps_flag && !_steps_run_flag){
+    if(_compiled && _steps_flag && !_steps_busy){
         _led(STEPS_LED, STATE_LED_BLINK);
     }else if(!_compiled){
         _led(RUN_LED, STATE_LED_OFF);
@@ -45,7 +45,7 @@ void Compiler::run(void){
         // One step run
         if(digitalRead(RUN_BUTTON) == LOW){
             _steps_flag = false;
-            _steps_run_flag = false;
+            _steps_busy = false;
             _led(RUN_LED, STATE_LED_ON);
             _scanBlocks();
             delay(600);
@@ -67,12 +67,12 @@ void Compiler::run(void){
                 _queue = 0;
                 _queue_temp = 0;
                 _steps_flag = false;
-                _steps_run_flag = false;
+                _steps_busy = false;
                 blocks.disable_function();
                 blocks.disable_slaves();
             }
         }else{
-            if(!_steps_flag || _steps_run_flag){
+            if(!_steps_flag || _steps_busy){
                 _execute();
             }
         }
@@ -92,6 +92,28 @@ boolean Compiler::_next(void){
     
     if((_function_flag && blocks._functions[_queue].address) 
         || (!_function_flag && blocks._blocks[_queue].address)){
+            /*
+            if has modifiers
+                
+                find last loop modifier index
+                
+                foreach modifier
+                    if modifier[i] is loop
+                        if !_loop
+                            if modifier[i]value >= 0
+                                _queue--
+                                modifier[i]value--
+                                modifier[i]led = blink
+                            else
+                                modifier[i]led = on
+                                reset modifier[i]value
+                                _loop = false
+                        else
+
+                    else
+                        do other stuff
+            */
+
 
             if(!_function_flag && blocks._blocks[_queue].type == MODE_FUNCTION){
                 _queue_temp = _queue;
@@ -127,9 +149,31 @@ void Compiler::_execute(void){
 
     if(!current_address || (_queue_temp == _queue && !_function_flag)){
         _busy = false;
-        _steps_run_flag = false;
+        _steps_busy = false;
         return;
     }
+
+    /*
+    if has modifiers
+        
+        find last loop modifier index
+        
+        foreach modifier
+            if modifier[i] is loop
+                if !_loop
+                    if modifier[i]value >= 0
+                        _queue--
+                        modifier[i]value--
+                        modifier[i]led = blink
+                    else
+                        modifier[i]led = on
+                        reset modifier[i]value
+                        _loop = false
+                else
+
+            else
+                do other stuff
+    */
     
 
     
@@ -163,13 +207,13 @@ void Compiler::_execute(void){
         blink_timeout = millis() + blink_interval;
 
         _busy = false;
-        _steps_run_flag = false;
+        _steps_busy = false;
 
         /***************************************************/
         // Switch off the led on function call block
-        if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
-            //blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
-        }
+        /*if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
+            blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
+        }*/
         /***************************************************/
 
     }

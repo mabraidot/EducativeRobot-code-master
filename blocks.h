@@ -29,13 +29,13 @@ class Blocks {
             byte address;
             byte type;
             byte value;
-        } _functionModifier;
+        } _modifier;
 
         typedef struct {
             byte address;
             byte type;
             byte value;
-            _functionModifier modifiers[FUNCTION_MODIFIERS_COUNT+1];
+            _modifier modifiers[FUNCTION_MODIFIERS_COUNT+1];
         } _functionBlock;
 
         _functionBlock _functions[FUNCTION_COUNT+1]; // 1-indexed
@@ -44,13 +44,7 @@ class Blocks {
             byte address;
             byte type;
             byte value;
-        } _slaveModifier;
-
-        typedef struct {
-            byte address;
-            byte type;
-            byte value;
-            _slaveModifier modifiers[SLAVES_MODIFIERS_COUNT+1];
+            _modifier modifiers[SLAVES_MODIFIERS_COUNT+1];
         } _slaveBlock;
 
         _slaveBlock _blocks[SLAVES_COUNT+1]; // 1-indexed
