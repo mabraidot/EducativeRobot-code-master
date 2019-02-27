@@ -215,6 +215,19 @@ void Blocks::read_status(byte address){
 }
 
 
+void Blocks::set_state(byte address, byte reg, byte value){
+    /*if(!slaveExists(address)){
+        debug.println(address);
+        debug.println(F(": Doesn't exists."));
+    }else{*/
+        Wire.beginTransmission(address);
+        Wire.write(reg);        // RegAddress
+        Wire.write(value);      // Value
+        Wire.endTransmission();
+    //}
+}
+
+
 uint8_t Blocks::read_state(byte address, byte reg){
     memset(_status,0,sizeof(_status));
     for(int j=0;j<sizeof(_status);j++){

@@ -89,32 +89,73 @@ void Compiler::run(void){
 boolean Compiler::_next(void){
     
     _queue++;
+
+    // Modifiers
+    byte modifiers_count = 0;
+    Blocks::_modifier modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
+    if(_function_flag){
+        for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
+            modifiers[j] = blocks._functions[_queue-1].modifiers[j];
+            modifiers_count++;
+        }
+    }else{
+        for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
+            modifiers[j] = blocks._blocks[_queue-1].modifiers[j];
+            modifiers_count++;
+        }
+    }
+    if(modifiers_count > 0){
+        //_loop = false;
+        byte modifier_state = 0;
+        for( byte i = 1; i <= modifiers_count; i++ ){
+            if(modifiers[i].address && modifiers[i].type == MODE_MODIFIER_LOOP){
+                _loop = modifiers[i].loop_value;
+                if(_loop > 1){
+
+                    _queue--;
+                    _loop--;
+                    if(_function_flag){
+                        blocks._functions[_queue].modifiers[i].loop_value = _loop;
+                    }else{
+                        blocks._blocks[_queue].modifiers[i].loop_value = _loop;
+                    }
+
+
+                    debug.print(F("_queue: "));
+                    debug.print(_queue);
+                    debug.print(F(" - mod addr: "));
+                    debug.print(modifiers[i].address);
+                    debug.print(F(" - Next - Modifier state: "));
+                    debug.println(_loop);
+                    
+                    
+                }else{
+                    //reset loop_value
+                    if(_function_flag){
+                        blocks._functions[_queue-1].modifiers[i].loop_value = blocks._functions[_queue-1].modifiers[i].value;
+                    }else{
+                        blocks._blocks[_queue-1].modifiers[i].loop_value = blocks._blocks[_queue-1].modifiers[i].value;
+                    }
+
+                    blocks.flash_led(modifiers[i].address, STATE_LED_ON);
+                    if(_function_flag){
+                        blocks.set_state(modifiers[i].address, STATE_VALUE, blocks._functions[_queue-1].modifiers[i].value);
+                    }else{
+                        blocks.set_state(modifiers[i].address, STATE_VALUE, blocks._blocks[_queue-1].modifiers[i].value);
+                    }
+                }
+            }else{
+                // Do other stuff
+            }
+        }
+    }
+    // End modifiers
+
+
     
     if((_function_flag && blocks._functions[_queue].address) 
         || (!_function_flag && blocks._blocks[_queue].address)){
-            /*
-            if has modifiers
-                
-                find last loop modifier index
-                
-                foreach modifier
-                    if modifier[i] is loop
-                        if !_loop
-                            if modifier[i]value >= 0
-                                _queue--
-                                modifier[i]value--
-                                modifier[i]led = blink
-                            else
-                                modifier[i]led = on
-                                reset modifier[i]value
-                                _loop = false
-                        else
-
-                    else
-                        do other stuff
-            */
-
-
+            
             if(!_function_flag && blocks._blocks[_queue].type == MODE_FUNCTION){
                 _queue_temp = _queue;
                 _queue = 0;
@@ -153,29 +194,48 @@ void Compiler::_execute(void){
         return;
     }
 
-    /*
-    if has modifiers
-        
-        find last loop modifier index
-        
-        foreach modifier
-            if modifier[i] is loop
-                if !_loop
-                    if modifier[i]value >= 0
-                        _queue--
-                        modifier[i]value--
-                        modifier[i]led = blink
-                    else
-                        modifier[i]led = on
-                        reset modifier[i]value
-                        _loop = false
-                else
-
-            else
-                do other stuff
-    */
+    // Modifiers
+    byte modifiers_count = 0;
+    Blocks::_modifier modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
+    if(_function_flag){
+        for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
+            modifiers[j] = blocks._functions[_queue].modifiers[j];
+            modifiers_count++;
+        }
+    }else{
+        for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
+            modifiers[j] = blocks._blocks[_queue].modifiers[j];
+            modifiers_count++;
+        }
+    }
+    if(modifiers_count > 0){
+        //_loop = false;
+        byte modifier_state = 0;
+        for( byte i = 1; i <= modifiers_count; i++ ){
+            if(modifiers[i].address && modifiers[i].type == MODE_MODIFIER_LOOP){
+                _loop = modifiers[i].loop_value;
+                if(_loop > 0){
+                    if(blocks.read_state(modifiers[i].address, STATE_VALUE) != _loop-1){
+                        blocks.set_state(modifiers[i].address, STATE_VALUE, _loop-1);
+                    }
+                    if(blocks.read_state(modifiers[i].address, STATE_LED) != STATE_LED_BLINK){
+                        blocks.flash_led(modifiers[i].address, STATE_LED_BLINK);
+                    }
+                    
+                    debug.print(F("_queue: "));
+                    debug.print(_queue);
+                    debug.print(F(" - mod addr: "));
+                    debug.print(modifiers[i].address);
+                    debug.print(F(" - Exe - Modifier state: "));
+                    debug.println(_loop-1);
+                }
+            }else{
+                // Do other stuff
+            }
+        }
+    }
+    // End modifiers
     
-
     
     /***** DEMO *******/
 
@@ -194,6 +254,8 @@ void Compiler::_execute(void){
     if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
         blocks.flash_led(current_address, STATE_LED_BLINK);
     }
+
+    // End of execution
     if(blink_timeout < millis()){
         if(_function_flag){
             debug.print(F("Executed function: "));
@@ -238,11 +300,13 @@ boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte
                 blocks._functions[_block_position].modifiers[_block_modifier_position].address = _block_address;
                 blocks._functions[_block_position].modifiers[_block_modifier_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._functions[_block_position].modifiers[_block_modifier_position].value = blocks.read_state(_block_address, STATE_VALUE);
+                blocks._functions[_block_position].modifiers[_block_modifier_position].loop_value = blocks._functions[_block_position].modifiers[_block_modifier_position].value;
                 blocks.flash_led(blocks._functions[_block_position].modifiers[_block_modifier_position].address,STATE_LED_ON);
             }else{
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].address = _block_address;
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].value = blocks.read_state(_block_address, STATE_VALUE);
+                blocks._blocks[_block_position].modifiers[_block_modifier_position].loop_value = blocks._blocks[_block_position].modifiers[_block_modifier_position].value;
                 blocks.flash_led(blocks._blocks[_block_position].modifiers[_block_modifier_position].address,STATE_LED_ON);
             }
             blocks.open_gate(_block_address);
@@ -250,6 +314,7 @@ boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte
                 
             return true;
         }else{
+            debug.println(F("... Not responding!"));
             return false;
         }
     }else{

@@ -24,11 +24,14 @@ class Blocks {
         void flash_led(byte address, byte mode);
         void read_status(byte address);
         uint8_t read_state(byte address, byte reg);
+        void set_state(byte address, byte reg, byte value);
+
 
         typedef struct {
             byte address;
             byte type;
             byte value;
+            byte loop_value;
         } _modifier;
 
         typedef struct {
