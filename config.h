@@ -9,9 +9,9 @@
 #define STEPS_LED                   6
 
 // I2C
-#define SLAVE_ADDRESS               0x01
-#define SLAVE_MODIFIER_ADDRESS      0x02
-#define SLAVE_START_ADDRESS         10
+#define SLAVE_ADDRESS               0x08
+#define SLAVE_MODIFIER_ADDRESS      0x09
+#define SLAVE_START_ADDRESS         20
 
 #define SLAVES_COUNT                40
 #define SLAVES_MODIFIERS_COUNT      3

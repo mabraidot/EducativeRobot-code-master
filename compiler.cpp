@@ -311,60 +311,61 @@ void Compiler::_execute(void){
 
 boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte _block_address, byte _block_position, byte _block_modifier_position){
 
-    //debug.print(_block_address);
+    debug.print(_block_address);
 
     if(_modifier_mode){
-        //debug.print((_function_mode) ? F("\tFUNCTION: Adding slave modifier ...\n") : F("\tBLOCKS: Adding slave modifier ...\n"));
+        debug.print((_function_mode) ? F("\tFUNCTION: Adding slave modifier ...\n") : F("\tBLOCKS: Adding slave modifier ...\n"));
         blocks.add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
 
-        delay(300);
-        if(blocks.read_state(_block_address, STATE_ACTIVATED)){
+        delay(100);
+        if(blocks.read_state(_block_address, STATE_ACTIVATED) == 1){
             
             if(_function_mode){
                 blocks._functions[_block_position].modifiers[_block_modifier_position].address = _block_address;
                 blocks._functions[_block_position].modifiers[_block_modifier_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._functions[_block_position].modifiers[_block_modifier_position].value = blocks.read_state(_block_address, STATE_VALUE);
                 blocks._functions[_block_position].modifiers[_block_modifier_position].loop_value = blocks._functions[_block_position].modifiers[_block_modifier_position].value;
-                blocks.flash_led(_block_address,STATE_LED_ON);
             }else{
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].address = _block_address;
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].value = blocks.read_state(_block_address, STATE_VALUE);
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].loop_value = blocks._blocks[_block_position].modifiers[_block_modifier_position].value;
-                blocks.flash_led(_block_address,STATE_LED_ON);
             }
+            blocks.flash_led(_block_address,STATE_LED_ON);
+            delay(50);
             blocks.open_gate(_block_address);
-            delay(300);
+            delay(100);
                 
             return true;
         }else{
-            //debug.println(F("... Not responding!"));
+            debug.println(F("... Not responding!"));
             return false;
         }
     }else{
-        //debug.print((_function_mode) ? F("\tFUNCTION: Adding slave ...\n") : F("\tBLOCKS: Adding slave ...\n"));
+        debug.print((_function_mode) ? F("\tFUNCTION: Adding slave ...\n") : F("\tBLOCKS: Adding slave ...\n"));
         blocks.add_slave(SLAVE_ADDRESS, _block_address);
 
-        delay(300);
-        if(blocks.read_state(_block_address, STATE_ACTIVATED)){
+        delay(100);
+        if(blocks.read_state(_block_address, STATE_ACTIVATED) == 1){
             
             if(_function_mode){
                 blocks._functions[_block_position].address = _block_address;
                 blocks._functions[_block_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._functions[_block_position].value = blocks.read_state(_block_address, STATE_VALUE);
-                blocks.flash_led(_block_address,STATE_LED_ON);
+                
             }else{
                 blocks._blocks[_block_position].address = _block_address;
                 blocks._blocks[_block_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._blocks[_block_position].value = blocks.read_state(_block_address, STATE_VALUE);
-                blocks.flash_led(_block_address,STATE_LED_ON);
             }
+            blocks.flash_led(_block_address,STATE_LED_ON);
+            delay(50);
             blocks.open_gate(_block_address);
-            delay(300);
+            delay(100);
                 
             return true;
         }else{
-            //debug.println(F("... Not responding!"));
+            debug.println(F("... Not responding!"));
             return false;
         }
     }

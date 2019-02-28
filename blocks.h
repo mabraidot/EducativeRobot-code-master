@@ -23,9 +23,9 @@ class Blocks {
         void close_gate(byte address);
         void flash_led(byte address, byte mode);
         void read_status(byte address);
-        uint8_t read_state(byte address, byte reg);
+        byte read_state(byte address, byte reg);
         void set_state(byte address, byte reg, byte value);
-        void Blocks::clear_eeprom(byte address);
+        void clear_eeprom(byte address);
 
 
         typedef struct {
@@ -65,7 +65,7 @@ class Blocks {
          * Pos 4 -> Slave function. e.g. Forward arrow
          * Pos 5 -> Slave modifying value
          */
-        uint8_t _status[6];
+        byte _status[6];
 
 };
 

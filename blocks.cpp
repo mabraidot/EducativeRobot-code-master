@@ -129,8 +129,8 @@ bool Blocks::slaveExists(byte address){
 
 void Blocks::add_slave(const byte old_address, byte address){
     Wire.beginTransmission(old_address);
-    Wire.write(STATE_ADDRESS);        // RegAddress
-    Wire.write(address);                    // Value
+    Wire.write(byte(STATE_ADDRESS));        // RegAddress
+    Wire.write(byte(address));                    // Value
     Wire.endTransmission();
 }
 
@@ -167,8 +167,8 @@ void Blocks::open_gate(byte address){
         debug.println(F(": Doesn't exists."));
     }else{
         Wire.beginTransmission(address);
-        Wire.write(STATE_GATE);   // RegAddress
-        Wire.write(1);                  // Value
+        Wire.write(byte(STATE_GATE));   // RegAddress
+        Wire.write(byte(1));                  // Value
         Wire.endTransmission();
     }
 }
@@ -181,8 +181,8 @@ void Blocks::close_gate(byte address){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(STATE_GATE);   // RegAddress
-        Wire.write(0);                  // Value
+        Wire.write(byte(STATE_GATE));   // RegAddress
+        Wire.write(byte(0));                  // Value
         Wire.endTransmission();
     //}
 }
@@ -194,8 +194,8 @@ void Blocks::flash_led(byte address, byte mode){
         debug.println(F(": Doesn't exists."));
     }else{*/
         Wire.beginTransmission(address);
-        Wire.write(STATE_LED);    // RegAddress
-        Wire.write(mode);               // Value
+        Wire.write(byte(STATE_LED));    // RegAddress
+        Wire.write(byte(mode));               // Value
         Wire.endTransmission();
     //}
 }
@@ -208,7 +208,7 @@ void Blocks::read_status(byte address){
     /*if(!slaveExists(address)){
         debug.println(F("Doesn't exists."));
     }else{*/
-        memset(_status,0,sizeof(_status));
+        //memset(_status,0,sizeof(_status));
         for(int j=0;j<sizeof(_status);j++){
             Wire.requestFrom(address, (uint8_t)1);
             if(Wire.available()){
@@ -225,34 +225,33 @@ void Blocks::read_status(byte address){
 
 
 void Blocks::set_state(byte address, byte reg, byte value){
-    /*if(!slaveExists(address)){
-        debug.println(address);
-        debug.println(F(": Doesn't exists."));
-    }else{*/
-        Wire.beginTransmission(address);
-        Wire.write(reg);        // RegAddress
-        Wire.write(value);      // Value
-        Wire.endTransmission();
-    //}
+    Wire.beginTransmission(address);
+    Wire.write(byte(reg));        // RegAddress
+    Wire.write(byte(value));      // Value
+    Wire.endTransmission();
 }
 
 
-uint8_t Blocks::read_state(byte address, byte reg){
-    memset(_status,0,sizeof(_status));
+byte Blocks::read_state(byte address, byte reg){
+    //memset(_status,0,sizeof(_status));
+    boolean received = false;
     for(int j=0;j<sizeof(_status);j++){
+        _status[j] = 0;
         Wire.requestFrom(address, (uint8_t)1);
         if(Wire.available()){
+            received = true;
             _status[j] = Wire.read();
         }
     }
-    return _status[reg];
+
+    return (received) ? _status[reg] : 0;
 }
 
 void Blocks::clear_eeprom(byte address){
     Wire.beginTransmission(address);
-    Wire.write(255);   // code for eeprom clearing
+    Wire.write(byte(255));   // code for eeprom clearing
     Wire.endTransmission();
-    
+
     debug.print(address);
     debug.println(F(" cleared."));
 }
