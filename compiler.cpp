@@ -86,88 +86,78 @@ void Compiler::run(void){
 /*--------------------------------------*/
 /*      PRIVATE FUNCTIONS               */
 /*--------------------------------------*/
-boolean Compiler::_next(void){
-    
-    _queue++;
+byte Compiler::_get_modifiers_count(boolean _function_flag, byte queue){
 
-    // Modifiers
     byte _modifiers_count = 0;
-    Blocks::_modifier _modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
     if(_function_flag){
         for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
-            if(blocks._functions[_queue-1].modifiers[j].address){
-                _modifiers[j] = blocks._functions[_queue-1].modifiers[j];
+            if(blocks._functions[queue].modifiers[j].address){
                 _modifiers_count++;
             }
         }
     }else{
         for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
-            if(blocks._blocks[_queue-1].modifiers[j].address){
-                _modifiers[j] = blocks._blocks[_queue-1].modifiers[j];
+            if(blocks._blocks[queue].modifiers[j].address){
                 _modifiers_count++;
             }
         }
     }
+
+    return _modifiers_count;
+
+}
+
+
+void Compiler::_set_modifier_values(boolean _function_flag, byte queue, byte i, byte *_type, byte *_loop, byte *_old_value, byte *_address){
+
+    if(_function_flag){
+        *_type = blocks._functions[queue].modifiers[i].type;
+        *_loop = blocks._functions[queue].modifiers[i].loop_value;
+        *_old_value = blocks._functions[queue].modifiers[i].value;
+        *_address = blocks._functions[queue].modifiers[i].address;
+    }else{
+        *_type = blocks._blocks[queue].modifiers[i].type;
+        *_loop = blocks._blocks[queue].modifiers[i].loop_value;
+        *_old_value = blocks._blocks[queue].modifiers[i].value;
+        *_address = blocks._blocks[queue].modifiers[i].address;
+    }
+
+}
+
+
+boolean Compiler::_next(void){
+    
+    _queue++;
+
+    // Modifiers
+    byte _modifiers_count = _get_modifiers_count(_function_flag, _queue-1);
     if(_modifiers_count > 0){
         for( byte i = 1; i <= _modifiers_count; i++ ){
-            if(_modifiers[i].address && _modifiers[i].type == MODE_MODIFIER_LOOP){
-                _loop = _modifiers[i].loop_value;
+            byte _type, _loop, _old_value, _address = 0;
+            _set_modifier_values(_function_flag, _queue-1, i, &_type, &_loop, &_old_value, &_address);
+            if(_type == MODE_MODIFIER_LOOP){
                 if(_loop > 1){
 
                     _queue--;
-                    _loop--;
+                    
                     if(_function_flag){
-                        blocks._functions[_queue].modifiers[i].loop_value = _loop;
+                        blocks._functions[_queue].modifiers[i].loop_value = _loop-1;
                     }else{
-                        blocks._blocks[_queue].modifiers[i].loop_value = _loop;
+                        blocks._blocks[_queue].modifiers[i].loop_value = _loop-1;
                     }
-
-
-                    /*debug.print(F("_queue_temp: "));
-                    debug.print(_queue_temp);
-                    debug.print(F(" - _queue: "));
-                    debug.print(_queue);
-                    debug.print(F(" - i: "));
-                    debug.print(i);
-                    debug.print(F(" - mod addr: "));
-                    debug.print(_modifiers[i].address);
-                    debug.print(F(" - Next - Modifier state: "));
-                    debug.println(_loop);
-                    */
                     
                 }else{
                     // Reset loop_value
-                    byte old_value = _modifiers[i].value;
-                    
                     if(_function_flag){
-                        blocks._functions[_queue-1].modifiers[i].loop_value = old_value;
-                        if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != old_value){
-                            blocks.set_state(_modifiers[i].address, STATE_VALUE, old_value);
-                        }
+                        blocks._functions[_queue-1].modifiers[i].loop_value = _old_value;
+                        blocks.set_state(_address, STATE_VALUE, _old_value);
                     }else{
-                        blocks._blocks[_queue-1].modifiers[i].loop_value = old_value;
-                        if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != old_value){
-                            blocks.set_state(_modifiers[i].address, STATE_VALUE, old_value);
-                        }
+                        blocks._blocks[_queue-1].modifiers[i].loop_value = _old_value;
+                        blocks.set_state(_address, STATE_VALUE, _old_value);
                     }
-
-                    if(blocks.read_state(_modifiers[i].address, STATE_LED) != STATE_LED_ON){
-                        blocks.flash_led(_modifiers[i].address, STATE_LED_ON);
-                    }
-                    
-                    /*
-                    debug.print(F("_queue_temp: "));
-                    debug.print(_queue_temp);
-                    debug.print(F(" - _queue: "));
-                    debug.print(_queue-1);
-                    debug.print(F(" - i: "));
-                    debug.print(i);
-                    debug.print(F(" - mod addr: "));
-                    debug.print(_modifiers[i].address);
-                    debug.print(F(" - Next Out - Modifier state: "));
-                    debug.println(_loop);
-                    debug.println(F(" "));
-                    */
+                    delay(50);
+                    blocks.flash_led(_address, STATE_LED_ON);
+                    delay(50);
                     
                 }
             }else{
@@ -215,6 +205,33 @@ void Compiler::_execute(void){
     }
 
 
+    // Function call modifiers
+    if(_queue_temp == _queue){
+        byte _modifiers_count = _get_modifiers_count(false, _queue_temp);
+        if(_modifiers_count > 0){
+            for( byte i = 1; i <= _modifiers_count; i++ ){
+                byte _type, _loop, _old_value, _address = 0;
+                _set_modifier_values(false, _queue_temp, i, &_type, &_loop, &_old_value, &_address);
+                if(_type == MODE_MODIFIER_LOOP){
+                    if(_loop > 0){
+
+                        if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
+                            blocks.set_state(_address, STATE_VALUE, _loop-1);
+                        }
+                        if(blocks.read_state(_address, STATE_LED) != STATE_LED_BLINK){
+                            blocks.flash_led(_address, STATE_LED_BLINK);
+                        }
+
+                    }
+                }else{
+                    // Do other stuff
+                }
+            }
+        }
+    }
+    // End function call modifiers
+
+    // If function execution is over, return to the next step
     if(!current_address || (_queue_temp == _queue && !_function_flag)){
         _busy = false;
         _steps_busy = false;
@@ -222,34 +239,19 @@ void Compiler::_execute(void){
     }
 
     // Modifiers
-    byte _modifiers_count = 0;
-    Blocks::_modifier _modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
-    if(_function_flag){
-        for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
-            if(blocks._functions[_queue].modifiers[j].address){
-                _modifiers[j] = blocks._functions[_queue].modifiers[j];
-                _modifiers_count++;
-            }
-        }
-    }else{
-        for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
-            if(blocks._blocks[_queue].modifiers[j].address){
-                _modifiers[j] = blocks._blocks[_queue].modifiers[j];
-                _modifiers_count++;
-            }
-        }
-    }
+    byte _modifiers_count = _get_modifiers_count(_function_flag, _queue);
     if(_modifiers_count > 0){
         for( byte i = 1; i <= _modifiers_count; i++ ){
-            if(_modifiers[i].address && _modifiers[i].type == MODE_MODIFIER_LOOP){
-                _loop = _modifiers[i].loop_value;
+            byte _type, _loop, _old_value, _address = 0;
+            _set_modifier_values(_function_flag, _queue, i, &_type, &_loop, &_old_value, &_address);
+            if(_type == MODE_MODIFIER_LOOP){
                 if(_loop > 0){
 
-                    if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != _loop-1){
-                        blocks.set_state(_modifiers[i].address, STATE_VALUE, _loop-1);
+                    if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
+                        blocks.set_state(_address, STATE_VALUE, _loop-1);
                     }
-                    if(blocks.read_state(_modifiers[i].address, STATE_LED) != STATE_LED_BLINK){
-                        blocks.flash_led(_modifiers[i].address, STATE_LED_BLINK);
+                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_BLINK){
+                        blocks.flash_led(_address, STATE_LED_BLINK);
                     }
 
                 }
@@ -259,6 +261,9 @@ void Compiler::_execute(void){
         }
     }
     // End modifiers
+    
+    
+
     
     
     /***** DEMO *******/
@@ -317,7 +322,7 @@ boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte
         debug.print((_function_mode) ? F("\tFUNCTION: Adding slave modifier ...\n") : F("\tBLOCKS: Adding slave modifier ...\n"));
         blocks.add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
 
-        delay(100);
+        delay(150);
         if(blocks.read_state(_block_address, STATE_ACTIVATED) == 1){
             
             if(_function_mode){
@@ -345,7 +350,7 @@ boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte
         debug.print((_function_mode) ? F("\tFUNCTION: Adding slave ...\n") : F("\tBLOCKS: Adding slave ...\n"));
         blocks.add_slave(SLAVE_ADDRESS, _block_address);
 
-        delay(100);
+        delay(150);
         if(blocks.read_state(_block_address, STATE_ACTIVATED) == 1){
             
             if(_function_mode){

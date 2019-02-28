@@ -33,6 +33,9 @@ class Compiler {
         void _execute(void);
         void _led(byte pin, byte mode);
 
+        byte _get_modifiers_count(boolean _function_flag, byte queue);
+        void _set_modifier_values(boolean _function_flag, byte queue, byte i, byte *_type, byte *_loop, byte *_old_value, byte *_address);
+
 };
 
 extern Compiler compiler;
