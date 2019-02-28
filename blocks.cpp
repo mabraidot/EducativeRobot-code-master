@@ -34,7 +34,7 @@ void Blocks::empty_blocks(void){
 }
 
 
-void Blocks::off_leds(){
+void Blocks::off_leds(boolean function_only){
     for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
         if(_functions[i].address){
             flash_led(_functions[i].address,STATE_LED_OFF);
@@ -45,12 +45,14 @@ void Blocks::off_leds(){
             }
         }
     }
-    for( byte i = 1; i <= SLAVES_COUNT; i++ ){
-        if(_blocks[i].address){
-            flash_led(_blocks[i].address,STATE_LED_OFF);
-            for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
-                if(_blocks[i].modifiers[j].address){
-                    flash_led(_blocks[i].modifiers[j].address,STATE_LED_OFF);
+    if(!function_only){
+        for( byte i = 1; i <= SLAVES_COUNT; i++ ){
+            if(_blocks[i].address){
+                flash_led(_blocks[i].address,STATE_LED_OFF);
+                for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
+                    if(_blocks[i].modifiers[j].address){
+                        flash_led(_blocks[i].modifiers[j].address,STATE_LED_OFF);
+                    }
                 }
             }
         }
@@ -101,11 +103,23 @@ bool Blocks::slaveExists(byte address){
     for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
         if(_functions[i].address == address){
             found = true;
+        }else{
+            for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
+                if(_functions[i].modifiers[j].address == address){
+                    found = true;
+                }
+            }
         }
     }
     for( byte i = 1; i <= SLAVES_COUNT; i++ ){
         if(_blocks[i].address == address){
             found = true;
+        }else{
+            for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
+                if(_blocks[i].modifiers[j].address == address){
+                    found = true;
+                }
+            }
         }
     }
 
@@ -114,15 +128,10 @@ bool Blocks::slaveExists(byte address){
 
 
 void Blocks::add_slave(const byte old_address, byte address){
-  /*if(!slaveExists(address)){
-      debug.print(address);
-      debug.println(F(": Doesn't exists."));
-  }else{*/
     Wire.beginTransmission(old_address);
     Wire.write(STATE_ADDRESS);        // RegAddress
     Wire.write(address);                    // Value
     Wire.endTransmission();
-  //}
 }
 
 
@@ -152,22 +161,22 @@ void Blocks::disable_function(void){
 
 
 void Blocks::open_gate(byte address){
-    debug.print(address);
-    debug.println(F(": Opening."));
-    /*if(!slaveExists(address)){
+    //debug.print(address);
+    //debug.println(F(": Opening."));
+    if(!slaveExists(address)){
         debug.println(F(": Doesn't exists."));
-    }else{*/
+    }else{
         Wire.beginTransmission(address);
         Wire.write(STATE_GATE);   // RegAddress
         Wire.write(1);                  // Value
         Wire.endTransmission();
-    //}
+    }
 }
 
 
 void Blocks::close_gate(byte address){
-    debug.print(address);
-    debug.println(F(": Closing."));
+    //debug.print(address);
+    //debug.println(F(": Closing."));
     /*if(!slaveExists(address)){
         debug.println(F(": Doesn't exists."));
     }else{*/

@@ -23,7 +23,7 @@ void Compiler::run(void){
         if(!_compiled){
             _steps_flag = true;
             _led(STEPS_LED, STATE_LED_ON);
-            _scanBlocks();
+            scanBlocks();
             _led(STEPS_LED, STATE_LED_OFF);
         }else{
             _steps_busy = true;
@@ -47,7 +47,7 @@ void Compiler::run(void){
             _steps_flag = false;
             _steps_busy = false;
             _led(RUN_LED, STATE_LED_ON);
-            _scanBlocks();
+            scanBlocks();
             delay(600);
         }
 
@@ -91,25 +91,27 @@ boolean Compiler::_next(void){
     _queue++;
 
     // Modifiers
-    byte modifiers_count = 0;
-    Blocks::_modifier modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
+    byte _modifiers_count = 0;
+    Blocks::_modifier _modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
     if(_function_flag){
         for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
-            modifiers[j] = blocks._functions[_queue-1].modifiers[j];
-            modifiers_count++;
+            if(blocks._functions[_queue-1].modifiers[j].address){
+                _modifiers[j] = blocks._functions[_queue-1].modifiers[j];
+                _modifiers_count++;
+            }
         }
     }else{
         for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
-            modifiers[j] = blocks._blocks[_queue-1].modifiers[j];
-            modifiers_count++;
+            if(blocks._blocks[_queue-1].modifiers[j].address){
+                _modifiers[j] = blocks._blocks[_queue-1].modifiers[j];
+                _modifiers_count++;
+            }
         }
     }
-    if(modifiers_count > 0){
-        //_loop = false;
-        byte modifier_state = 0;
-        for( byte i = 1; i <= modifiers_count; i++ ){
-            if(modifiers[i].address && modifiers[i].type == MODE_MODIFIER_LOOP){
-                _loop = modifiers[i].loop_value;
+    if(_modifiers_count > 0){
+        for( byte i = 1; i <= _modifiers_count; i++ ){
+            if(_modifiers[i].address && _modifiers[i].type == MODE_MODIFIER_LOOP){
+                _loop = _modifiers[i].loop_value;
                 if(_loop > 1){
 
                     _queue--;
@@ -121,28 +123,51 @@ boolean Compiler::_next(void){
                     }
 
 
-                    debug.print(F("_queue: "));
+                    debug.print(F("_queue_temp: "));
+                    debug.print(_queue_temp);
+                    debug.print(F(" - _queue: "));
                     debug.print(_queue);
+                    debug.print(F(" - i: "));
+                    debug.print(i);
                     debug.print(F(" - mod addr: "));
-                    debug.print(modifiers[i].address);
+                    debug.print(_modifiers[i].address);
                     debug.print(F(" - Next - Modifier state: "));
                     debug.println(_loop);
                     
                     
                 }else{
-                    //reset loop_value
+                    // Reset loop_value
+                    byte old_value = _modifiers[i].value;
+
                     if(_function_flag){
-                        blocks._functions[_queue-1].modifiers[i].loop_value = blocks._functions[_queue-1].modifiers[i].value;
+                        blocks._functions[_queue-1].modifiers[i].loop_value = old_value;
+                        if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != old_value){
+                            blocks.set_state(_modifiers[i].address, STATE_VALUE, old_value);
+                        }
                     }else{
-                        blocks._blocks[_queue-1].modifiers[i].loop_value = blocks._blocks[_queue-1].modifiers[i].value;
+                        blocks._blocks[_queue-1].modifiers[i].loop_value = old_value;
+                        if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != old_value){
+                            blocks.set_state(_modifiers[i].address, STATE_VALUE, old_value);
+                        }
                     }
 
-                    blocks.flash_led(modifiers[i].address, STATE_LED_ON);
-                    if(_function_flag){
-                        blocks.set_state(modifiers[i].address, STATE_VALUE, blocks._functions[_queue-1].modifiers[i].value);
-                    }else{
-                        blocks.set_state(modifiers[i].address, STATE_VALUE, blocks._blocks[_queue-1].modifiers[i].value);
+                    if(blocks.read_state(_modifiers[i].address, STATE_LED) != STATE_LED_ON){
+                        blocks.flash_led(_modifiers[i].address, STATE_LED_ON);
                     }
+                    
+                    
+                    debug.print(F("_queue_temp: "));
+                    debug.print(_queue_temp);
+                    debug.print(F(" - _queue: "));
+                    debug.print(_queue-1);
+                    debug.print(F(" - i: "));
+                    debug.print(i);
+                    debug.print(F(" - mod addr: "));
+                    debug.print(_modifiers[i].address);
+                    debug.print(F(" - Next Out - Modifier state: "));
+                    debug.println(_loop);
+                    debug.println(F(" "));
+                    
                 }
             }else{
                 // Do other stuff
@@ -160,6 +185,7 @@ boolean Compiler::_next(void){
                 _queue_temp = _queue;
                 _queue = 0;
                 _function_flag = true;
+                blocks.off_leds(true);  // Turn off function leds
             }
             _busy = true;
 
@@ -195,39 +221,36 @@ void Compiler::_execute(void){
     }
 
     // Modifiers
-    byte modifiers_count = 0;
-    Blocks::_modifier modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
+    byte _modifiers_count = 0;
+    Blocks::_modifier _modifiers[max(FUNCTION_MODIFIERS_COUNT, SLAVES_MODIFIERS_COUNT) + 1] = {};
     if(_function_flag){
         for( byte j = 1; j <= FUNCTION_MODIFIERS_COUNT; j++ ){
-            modifiers[j] = blocks._functions[_queue].modifiers[j];
-            modifiers_count++;
+            if(blocks._functions[_queue].modifiers[j].address){
+                _modifiers[j] = blocks._functions[_queue].modifiers[j];
+                _modifiers_count++;
+            }
         }
     }else{
         for( byte j = 1; j <= SLAVES_MODIFIERS_COUNT; j++ ){
-            modifiers[j] = blocks._blocks[_queue].modifiers[j];
-            modifiers_count++;
+            if(blocks._blocks[_queue].modifiers[j].address){
+                _modifiers[j] = blocks._blocks[_queue].modifiers[j];
+                _modifiers_count++;
+            }
         }
     }
-    if(modifiers_count > 0){
-        //_loop = false;
-        byte modifier_state = 0;
-        for( byte i = 1; i <= modifiers_count; i++ ){
-            if(modifiers[i].address && modifiers[i].type == MODE_MODIFIER_LOOP){
-                _loop = modifiers[i].loop_value;
+    if(_modifiers_count > 0){
+        for( byte i = 1; i <= _modifiers_count; i++ ){
+            if(_modifiers[i].address && _modifiers[i].type == MODE_MODIFIER_LOOP){
+                _loop = _modifiers[i].loop_value;
                 if(_loop > 0){
-                    if(blocks.read_state(modifiers[i].address, STATE_VALUE) != _loop-1){
-                        blocks.set_state(modifiers[i].address, STATE_VALUE, _loop-1);
+
+                    if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != _loop-1){
+                        blocks.set_state(_modifiers[i].address, STATE_VALUE, _loop-1);
                     }
-                    if(blocks.read_state(modifiers[i].address, STATE_LED) != STATE_LED_BLINK){
-                        blocks.flash_led(modifiers[i].address, STATE_LED_BLINK);
+                    if(blocks.read_state(_modifiers[i].address, STATE_LED) != STATE_LED_BLINK){
+                        blocks.flash_led(_modifiers[i].address, STATE_LED_BLINK);
                     }
-                    
-                    debug.print(F("_queue: "));
-                    debug.print(_queue);
-                    debug.print(F(" - mod addr: "));
-                    debug.print(modifiers[i].address);
-                    debug.print(F(" - Exe - Modifier state: "));
-                    debug.println(_loop-1);
+
                 }
             }else{
                 // Do other stuff
@@ -287,13 +310,13 @@ void Compiler::_execute(void){
 
 boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte _block_address, byte _block_position, byte _block_modifier_position){
 
-    debug.print(_block_address);
+    //debug.print(_block_address);
 
     if(_modifier_mode){
-        debug.print((_function_mode) ? F("\tFUNCTION: Adding slave modifier ...\n") : F("\tBLOCKS: Adding slave modifier ...\n"));
+        //debug.print((_function_mode) ? F("\tFUNCTION: Adding slave modifier ...\n") : F("\tBLOCKS: Adding slave modifier ...\n"));
         blocks.add_slave(SLAVE_MODIFIER_ADDRESS, _block_address);
-        
-        delay(1000);
+
+        delay(300);
         if(blocks.read_state(_block_address, STATE_ACTIVATED)){
             
             if(_function_mode){
@@ -301,45 +324,46 @@ boolean Compiler::_addSlave(boolean _function_mode, boolean _modifier_mode, byte
                 blocks._functions[_block_position].modifiers[_block_modifier_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._functions[_block_position].modifiers[_block_modifier_position].value = blocks.read_state(_block_address, STATE_VALUE);
                 blocks._functions[_block_position].modifiers[_block_modifier_position].loop_value = blocks._functions[_block_position].modifiers[_block_modifier_position].value;
-                blocks.flash_led(blocks._functions[_block_position].modifiers[_block_modifier_position].address,STATE_LED_ON);
+                blocks.flash_led(_block_address,STATE_LED_ON);
             }else{
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].address = _block_address;
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].value = blocks.read_state(_block_address, STATE_VALUE);
                 blocks._blocks[_block_position].modifiers[_block_modifier_position].loop_value = blocks._blocks[_block_position].modifiers[_block_modifier_position].value;
-                blocks.flash_led(blocks._blocks[_block_position].modifiers[_block_modifier_position].address,STATE_LED_ON);
+                blocks.flash_led(_block_address,STATE_LED_ON);
             }
             blocks.open_gate(_block_address);
             delay(300);
                 
             return true;
         }else{
-            debug.println(F("... Not responding!"));
+            //debug.println(F("... Not responding!"));
             return false;
         }
     }else{
-        debug.print((_function_mode) ? F("\tFUNCTION: Adding slave ...\n") : F("\tBLOCKS: Adding slave ...\n"));
+        //debug.print((_function_mode) ? F("\tFUNCTION: Adding slave ...\n") : F("\tBLOCKS: Adding slave ...\n"));
         blocks.add_slave(SLAVE_ADDRESS, _block_address);
-        
-        delay(600);
+
+        delay(300);
         if(blocks.read_state(_block_address, STATE_ACTIVATED)){
             
             if(_function_mode){
                 blocks._functions[_block_position].address = _block_address;
                 blocks._functions[_block_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._functions[_block_position].value = blocks.read_state(_block_address, STATE_VALUE);
-                blocks.flash_led(blocks._functions[_block_position].address,STATE_LED_ON);
+                blocks.flash_led(_block_address,STATE_LED_ON);
             }else{
                 blocks._blocks[_block_position].address = _block_address;
                 blocks._blocks[_block_position].type = blocks.read_state(_block_address, STATE_FUNCTION);
                 blocks._blocks[_block_position].value = blocks.read_state(_block_address, STATE_VALUE);
-                blocks.flash_led(blocks._blocks[_block_position].address,STATE_LED_ON);
+                blocks.flash_led(_block_address,STATE_LED_ON);
             }
             blocks.open_gate(_block_address);
             delay(300);
                 
             return true;
         }else{
+            //debug.println(F("... Not responding!"));
             return false;
         }
     }
@@ -383,7 +407,7 @@ byte Compiler::_scanI2CBuffer(byte _block_address, boolean _function_mode){
 }
 
 
-void Compiler::_scanBlocks(void){
+void Compiler::scanBlocks(void){
     
     blocks.disable_function();
     blocks.disable_slaves();
@@ -398,7 +422,7 @@ void Compiler::_scanBlocks(void){
     _block_address = _scanI2CBuffer(_block_address, false);
 
     blocks.scanResults();
-    blocks.off_leds();
+    blocks.off_leds(false);
 
     _compiled = true;
 }

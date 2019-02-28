@@ -10,7 +10,7 @@ class Blocks {
         void init(void);
         void empty_blocks(void);
         void scanResults(void);
-        void off_leds();
+        void off_leds(boolean function_only);
         bool slaveExists(byte address);
 
         void add_slave(const byte old_address, byte address);

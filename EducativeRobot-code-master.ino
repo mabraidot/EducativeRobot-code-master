@@ -12,8 +12,7 @@ void process_serial(){
   if (cmd > 'Z') cmd -= 32;
   switch (cmd) {
     case 'H': help(); break;
-    //case 'S': blocks.scanI2CDevices(); break;
-    case 'S': compiler.run(); break;
+    case 'S': compiler.scanBlocks(); break;
     case 'M': blocks.scanResults(); break;
     case 'D': 
         {
@@ -26,6 +25,14 @@ void process_serial(){
             address = Serial.parseInt();
             byte mode = Serial.parseInt();
             blocks.flash_led(address, mode); 
+        }
+        break;
+    case 'V': 
+        {
+            address = Serial.parseInt();
+            byte reg = Serial.parseInt();
+            byte value = Serial.parseInt();
+            blocks.set_state(address, reg, value); 
         }
         break;
     case 'E': 
@@ -73,6 +80,7 @@ void help(){
   debug.println(F("L<addr>,<mode>: Onboard led of slave on <addr> address. Modes: 0->off, 1->on, 2->blink"));
   debug.println(F("O<addr>: Activate the child slave of the slave on <addr> address"));
   debug.println(F("C<addr>: Deactivate all the children slaves of the slave on <addr> address"));
+  debug.println(F("V<addr>,<reg>,<val>: Set <val> for the <reg> state on <addr> address."));
 }
 
 
