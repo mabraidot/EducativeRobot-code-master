@@ -123,7 +123,7 @@ boolean Compiler::_next(void){
                     }
 
 
-                    debug.print(F("_queue_temp: "));
+                    /*debug.print(F("_queue_temp: "));
                     debug.print(_queue_temp);
                     debug.print(F(" - _queue: "));
                     debug.print(_queue);
@@ -133,12 +133,12 @@ boolean Compiler::_next(void){
                     debug.print(_modifiers[i].address);
                     debug.print(F(" - Next - Modifier state: "));
                     debug.println(_loop);
-                    
+                    */
                     
                 }else{
                     // Reset loop_value
                     byte old_value = _modifiers[i].value;
-
+                    
                     if(_function_flag){
                         blocks._functions[_queue-1].modifiers[i].loop_value = old_value;
                         if(blocks.read_state(_modifiers[i].address, STATE_VALUE) != old_value){
@@ -155,7 +155,7 @@ boolean Compiler::_next(void){
                         blocks.flash_led(_modifiers[i].address, STATE_LED_ON);
                     }
                     
-                    
+                    /*
                     debug.print(F("_queue_temp: "));
                     debug.print(_queue_temp);
                     debug.print(F(" - _queue: "));
@@ -167,6 +167,7 @@ boolean Compiler::_next(void){
                     debug.print(F(" - Next Out - Modifier state: "));
                     debug.println(_loop);
                     debug.println(F(" "));
+                    */
                     
                 }
             }else{

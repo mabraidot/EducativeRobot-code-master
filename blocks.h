@@ -25,6 +25,7 @@ class Blocks {
         void read_status(byte address);
         uint8_t read_state(byte address, byte reg);
         void set_state(byte address, byte reg, byte value);
+        void Blocks::clear_eeprom(byte address);
 
 
         typedef struct {

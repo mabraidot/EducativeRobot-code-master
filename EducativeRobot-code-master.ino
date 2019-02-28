@@ -42,6 +42,12 @@ void process_serial(){
             blocks.read_state(address, reg); 
         }
         break;
+    case 'B': 
+        {
+            address = Serial.parseInt();
+            blocks.clear_eeprom(address); 
+        }
+        break;
     case 'R': 
         {
             address = Serial.parseInt();
@@ -75,6 +81,7 @@ void help(){
   debug.println(F("S: Scan for I2C slaves"));
   debug.println(F("M: Show list of slaves found"));
   debug.println(F("D: Disable all slaves"));
+  debug.println(F("B<addr>: Clear EEPROM of slave on <addr> address"));
   debug.println(F("R<addr>: Read the buffer status of slave on <addr> address"));
   debug.println(F("E<addr>,<pos>: Read <pos> state of slave on <addr> address"));
   debug.println(F("L<addr>,<mode>: Onboard led of slave on <addr> address. Modes: 0->off, 1->on, 2->blink"));

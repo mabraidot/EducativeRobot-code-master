@@ -247,3 +247,12 @@ uint8_t Blocks::read_state(byte address, byte reg){
     }
     return _status[reg];
 }
+
+void Blocks::clear_eeprom(byte address){
+    Wire.beginTransmission(address);
+    Wire.write(255);   // code for eeprom clearing
+    Wire.endTransmission();
+    
+    debug.print(address);
+    debug.println(F(" cleared."));
+}
