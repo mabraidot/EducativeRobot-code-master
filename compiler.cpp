@@ -222,36 +222,35 @@ void Compiler::_execute(void){
     }
 
 
+    byte _modifiers_count = 0;
     // Function call modifiers
-    if(_queue_temp == _queue){
-        byte _modifiers_count = _get_modifiers_count(false, _queue_temp);
-        if(_modifiers_count > 0){
-            for( byte i = 1; i <= _modifiers_count; i++ ){
-                byte _type, _loop, _old_value, _address = 0;
-                _set_modifier_values(false, _queue_temp, i, &_type, &_loop, &_old_value, &_address);
-                if(_type == MODE_MODIFIER_LOOP){
-                    if(_loop > 0){
+    _modifiers_count = _get_modifiers_count(false, _queue_temp);
+    if(_modifiers_count > 0){
+        for( byte i = 1; i <= _modifiers_count; i++ ){
+            byte _type, _loop, _old_value, _address = 0;
+            _set_modifier_values(false, _queue_temp, i, &_type, &_loop, &_old_value, &_address);
+            if(_type == MODE_MODIFIER_LOOP){
+                if(_loop > 0){
+                    if(_queue_temp == _queue){
                         if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
                             blocks.set_state(_address, STATE_VALUE, _loop-1);
                         }
-                        /*if(blocks.read_state(_address, STATE_LED) != STATE_LED_BLINK){
-                            blocks.flash_led(_address, STATE_LED_BLINK);
-                        }*/
-                        if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
-                            blocks.flash_led(_address, STATE_LED_OFF);
-                        }
-                    }else{
-                        // Loop is setted to zero, stop execution and return
-                        if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
-                            blocks.flash_led(_address, STATE_LED_OFF);
-                        }
-                        _busy = false;
-                        _steps_busy = false;
-                        return;
+                    }
+                    // Little flash effect on loop number
+                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
+                        blocks.flash_led(_address, STATE_LED_OFF);
                     }
                 }else{
-                    // Do other stuff
+                    // Loop is setted to zero, stop execution and return
+                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
+                        blocks.flash_led(_address, STATE_LED_OFF);
+                    }
+                    _busy = false;
+                    _steps_busy = false;
+                    return;
                 }
+            }else{
+                // Do other stuff
             }
         }
     }
@@ -276,7 +275,7 @@ void Compiler::_execute(void){
     }
 
     // Modifiers
-    byte _modifiers_count = _get_modifiers_count(_function_flag, _queue);
+    _modifiers_count = _get_modifiers_count(_function_flag, _queue);
     if(_modifiers_count > 0){
         for( byte i = 1; i <= _modifiers_count; i++ ){
             byte _type, _loop, _old_value, _address = 0;
@@ -286,9 +285,7 @@ void Compiler::_execute(void){
                     if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
                         blocks.set_state(_address, STATE_VALUE, _loop-1);
                     }
-                    /*if(blocks.read_state(_address, STATE_LED) != STATE_LED_BLINK){
-                        blocks.flash_led(_address, STATE_LED_BLINK);
-                    }*/
+                    // Little flash effect on loop number
                     if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
                         blocks.flash_led(_address, STATE_LED_OFF);
                     }
