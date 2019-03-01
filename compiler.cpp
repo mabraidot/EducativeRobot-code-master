@@ -128,12 +128,13 @@ void Compiler::_set_modifier_values(boolean _function_flag, byte queue, byte i, 
 boolean Compiler::_next(void){
     
     _queue++;
+    byte _type, _loop, _old_value, _address = 0;
 
     // Modifiers
     byte _modifiers_count = _get_modifiers_count(_function_flag, _queue-1);
     if(_modifiers_count > 0){
         for( byte i = 1; i <= _modifiers_count; i++ ){
-            byte _type, _loop, _old_value, _address = 0;
+            _type, _loop, _old_value, _address = 0;
             _set_modifier_values(_function_flag, _queue-1, i, &_type, &_loop, &_old_value, &_address);
             if(_type == MODE_MODIFIER_LOOP){
                 if(_loop > 1){
@@ -145,12 +146,14 @@ boolean Compiler::_next(void){
                     }else{
                         blocks._blocks[_queue].modifiers[i].loop_value = _loop-1;
                     }
-                    // Little flash effect on loop number. Its going to be turned off later on execution
-                    blocks.flash_led(_address, STATE_LED_ON);
-                    delay(100);
-                    
+
                 }else{
                     // Reset loop_value and let leds turned on
+                    blocks.flash_led(_address, STATE_LED_ON);
+                    delay(100);
+                    blocks.flash_led(_address, STATE_LED_OFF);
+                    delay(50);
+                    
                     if(_function_flag){
                         blocks._functions[_queue-1].modifiers[i].loop_value = _old_value;
                         blocks.set_state(_address, STATE_VALUE, _old_value);
@@ -159,9 +162,6 @@ boolean Compiler::_next(void){
                         blocks.set_state(_address, STATE_VALUE, _old_value);
                     }
                     delay(50);
-                    blocks.flash_led(_address, STATE_LED_OFF);
-                    delay(50);
-                    
                 }
             }else{
                 // Do other stuff
@@ -174,16 +174,41 @@ boolean Compiler::_next(void){
     _modifiers_count = _get_modifiers_count(_function_flag, _queue);
     if(_modifiers_count > 0){
         for( byte i = 1; i <= _modifiers_count; i++ ){
-            byte _type, _loop, _old_value, _address = 0;
+            _type, _loop, _old_value, _address = 0;
             _set_modifier_values(_function_flag, _queue, i, &_type, &_loop, &_old_value, &_address);
             if(_type == MODE_MODIFIER_LOOP){
-                blocks.flash_led(_address, STATE_LED_ON);
-                delay(100);
+                if(_loop > 0){
+
+                    // Little flash effect on loop number
+                    if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
+                        blocks.flash_led(_address, STATE_LED_ON);
+                        delay(100);
+                        blocks.flash_led(_address, STATE_LED_OFF);
+                        delay(50);
+                    }
+                    // Set loop number on display
+                    blocks.set_state(_address, STATE_VALUE, _loop-1);
+                    delay(50);
+                    
+                }else{
+                    _busy = false;
+                    _steps_busy = false;
+                    return true;
+                }
             }
         }
     }
 
 
+
+    // Previous block has finished, let its led on
+    if(_function_flag && blocks._functions[_queue-1].address){
+        blocks.flash_led(blocks._functions[_queue-1].address, STATE_LED_ON);
+        delay(50);
+    }else if(blocks._blocks[_queue-1].address){
+        blocks.flash_led(blocks._blocks[_queue-1].address, STATE_LED_ON);
+        delay(50);
+    }
 
     
     if((_function_flag && blocks._functions[_queue].address) 
@@ -194,6 +219,12 @@ boolean Compiler::_next(void){
                 _queue = 0;
                 _function_flag = true;
                 blocks.off_leds(true);  // Turn off function leds
+                
+                delay(50);
+                // At the end of execution, leave function call block's led on
+                blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_ON);
+                delay(50);
+            
             }
             _busy = true;
 
@@ -220,128 +251,34 @@ void Compiler::_execute(void){
     }else{
         current_address = blocks._blocks[_queue].address;
     }
-
-
-    byte _modifiers_count = 0;
-    // Function call modifiers
-    _modifiers_count = _get_modifiers_count(false, _queue_temp);
-    if(_modifiers_count > 0){
-        for( byte i = 1; i <= _modifiers_count; i++ ){
-            byte _type, _loop, _old_value, _address = 0;
-            _set_modifier_values(false, _queue_temp, i, &_type, &_loop, &_old_value, &_address);
-            if(_type == MODE_MODIFIER_LOOP){
-                if(_loop > 0){
-                    if(_queue_temp == _queue){
-                        if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
-                            blocks.set_state(_address, STATE_VALUE, _loop-1);
-                        }
-                    }
-                    // Little flash effect on loop number
-                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
-                        blocks.flash_led(_address, STATE_LED_OFF);
-                    }
-                }else{
-                    // Loop is setted to zero, stop execution and return
-                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
-                        blocks.flash_led(_address, STATE_LED_OFF);
-                    }
-                    _busy = false;
-                    _steps_busy = false;
-                    return;
-                }
-            }else{
-                // Do other stuff
-            }
-        }
-    }
-    // End function call modifiers
-
-    /***************************************************/
-    // Switch on the led on function call block
-    if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
-        if(blocks.read_state(blocks._blocks[_queue_temp].address, STATE_LED) != STATE_LED_ON){
-            blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_ON);
-            debug.print(F("Executing function call: "));
-            debug.println(blocks._blocks[_queue_temp].address);
-        }
-    }
-    /***************************************************/
-
+    
     // If function execution is over, return to the next step
     if(!current_address || (_queue_temp == _queue && !_function_flag)){
         _busy = false;
         _steps_busy = false;
         return;
     }
-
-    // Modifiers
-    _modifiers_count = _get_modifiers_count(_function_flag, _queue);
-    if(_modifiers_count > 0){
-        for( byte i = 1; i <= _modifiers_count; i++ ){
-            byte _type, _loop, _old_value, _address = 0;
-            _set_modifier_values(_function_flag, _queue, i, &_type, &_loop, &_old_value, &_address);
-            if(_type == MODE_MODIFIER_LOOP){
-                if(_loop > 0){
-                    if(blocks.read_state(_address, STATE_VALUE) != _loop-1){
-                        blocks.set_state(_address, STATE_VALUE, _loop-1);
-                    }
-                    // Little flash effect on loop number
-                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
-                        blocks.flash_led(_address, STATE_LED_OFF);
-                    }
-                }else{
-                    // Loop is setted to zero, stop execution and return
-                    if(blocks.read_state(current_address, STATE_LED) != STATE_LED_ON){
-                        blocks.flash_led(current_address, STATE_LED_ON);
-                    }
-                    if(blocks.read_state(_address, STATE_LED) != STATE_LED_OFF){
-                        blocks.flash_led(_address, STATE_LED_OFF);
-                    }
-                    _busy = false;
-                    _steps_busy = false;
-                    return;
-                }
-            }else{
-                // Do other stuff
-            }
-        }
-    }
-    // End modifiers
     
-    
-
-    
-    
-    /***** DEMO *******/
-
-    
-    // Block execution
+    // Flash the led while the block is being executed
     if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
         blocks.flash_led(current_address, STATE_LED_BLINK);
     }
 
+
+    /***** DEMO *******/
+    // Do something ...
+
     // End of execution
     if(blink_timeout < millis()){
-        if(_function_flag){
-            debug.print(F("Executed function: "));
-        }else{
-            debug.print(F("Executed: "));
-        }
+        debug.print((_function_flag) ? F("Executed function: ") : F("Executed: "));
         debug.println(current_address);
     
-        //blocks.flash_led(current_address, STATE_LED_OFF);
-        blocks.flash_led(current_address, STATE_LED_ON);
+        
         blink_timeout = millis() + blink_interval;
+
 
         _busy = false;
         _steps_busy = false;
-
-        /***************************************************/
-        // Switch off the led on function call block
-        /*if(_queue_temp && _function_flag && blocks._blocks[_queue_temp].address){
-            blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_OFF);
-        }*/
-        /***************************************************/
 
     }
     /***** END DEMO *******/
