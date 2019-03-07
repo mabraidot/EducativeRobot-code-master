@@ -19,8 +19,8 @@
 #define RF_CLIENT_ADDRESS           1
 #define RF_SERVER_ADDRESS           2
 
-
-#define SLAVES_COUNT                25
+// LIMITS
+#define SLAVES_COUNT                20
 #define SLAVES_MODIFIERS_COUNT      3
 #define FUNCTION_COUNT              10
 #define FUNCTION_MODIFIERS_COUNT    3
