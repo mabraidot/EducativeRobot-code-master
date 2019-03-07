@@ -7,13 +7,20 @@
 #define RUN_LED                     8
 #define STEPS_BUTTON                5
 #define STEPS_LED                   6
+#define RF_CE                       9
+#define RF_CSN                      10
 
 // I2C
 #define SLAVE_ADDRESS               0x08
 #define SLAVE_MODIFIER_ADDRESS      0x09
 #define SLAVE_START_ADDRESS         20
 
-#define SLAVES_COUNT                40
+// RF
+#define RF_CLIENT_ADDRESS           1
+#define RF_SERVER_ADDRESS           2
+
+
+#define SLAVES_COUNT                25
 #define SLAVES_MODIFIERS_COUNT      3
 #define FUNCTION_COUNT              10
 #define FUNCTION_MODIFIERS_COUNT    3

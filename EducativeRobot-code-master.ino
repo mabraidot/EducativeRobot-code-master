@@ -2,9 +2,30 @@
 #include "debug.h"
 #include "blocks.h"
 #include "compiler.h"
+#include "rf.h"
 
 Blocks blocks;
 Compiler compiler;
+RF rf;
+
+/****************************************/
+/*  RF                                  */
+/****************************************/
+/*#include <RHReliableDatagram.h>
+#include <RH_NRF24.h>
+#include <SPI.h>
+
+#define CLIENT_ADDRESS 1
+#define SERVER_ADDRESS 2
+
+RH_NRF24 driver(9, 10);
+
+RHReliableDatagram manager(driver, SERVER_ADDRESS);
+uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN] = {0};*/
+
+/****************************************/
+/*  End RF                              */
+/****************************************/
 
 void process_serial(){
   char cmd = Serial.read();
@@ -93,19 +114,113 @@ void help(){
 
 void setup()
 {
-  Serial.begin(115200);
+    Serial.begin(115200);
 
-  blocks.init();
-  compiler.init();
-  
-  // wait for slave to finish any init sequence
-  delay(2000);
+    blocks.init();
+    compiler.init();
+    rf.init();
+    // RF
+    /*if (!manager.init()){
+        debug.println("RF init failed");
+    }else{
+        debug.println("RF init OK");
+    }*/
+
+    // wait for slave to finish any init sequence
+    delay(2000);
   
 }
 
 void loop()
 {
     if (Serial.available()) process_serial();
+
+    /*static int action_interval = 7000;
+    static unsigned long action_timeout = millis() + action_interval;
+    static uint8_t message[RH_NRF24_MAX_MESSAGE_LEN] = "01";
+    static boolean sent = false;
+    
+    uint8_t len = sizeof(buf);
+    uint8_t from;
+
+    //if(!sent && strncmp(message, "", 1) != 0){
+    if(!sent){
+
+        //sent = send_message(message);
+        action_timeout = millis() + action_interval;
+        Serial.print("Sending: ");
+        Serial.println((char *)message);
+        if (manager.sendtoWait(message, sizeof(message), CLIENT_ADDRESS)){
+            sent = true;
+            if (manager.recvfromAckTimeout(buf, &len, 2000, &from)){
+                Serial.print("Response: ");
+                Serial.println((char *)buf);
+            }else{
+                Serial.println("No reply, is nrf24_reliable_datagram_server running?");
+                sent = false;
+            }
+        }else{
+            Serial.println("RF sendtoWait failed");
+            sent = false;
+        }
+
+    }else{
+        if(sent){
+            if (manager.recvfromAck(buf, &len, &from)){
+                Serial.print("Response finished: ");
+                Serial.println((char *)buf);
+                sent = false;
+                byte action = ((byte)message[0]-48)*10 + (byte)message[1]-48;
+                action++;
+                sprintf(message, "%02d", action);
+            }else{
+                if(action_timeout < millis()){
+                    action_timeout = millis() + action_interval;
+                    Serial.println("Nothing received");
+                    sent = false;
+                }
+            }
+        }
+    }*/
+    
+    
+    /*static int action_interval = 4000;
+    static unsigned long action_timeout = millis() + action_interval;
+    static uint8_t action = 0;
+    static boolean sent = false;
+
+    uint8_t len = sizeof(buf);
+    uint8_t from;
+    if(action == 0){
+        if (manager.recvfromAck(buf, &len, &from)){
+            Serial.print("Buffer: ");
+            Serial.println((char *)buf);
+            //action = (byte)buf[0] - 48;
+            action = ((byte)buf[0]-48)*10 + (byte)buf[1]-48;
+            Serial.print("Action: ");
+            Serial.println(action);
+            if(!manager.sendtoWait(buf, sizeof(buf), CLIENT_ADDRESS)){
+                Serial.println("RF sendtoWait response failed");
+            }
+            action_timeout = millis() + action_interval;
+        }
+    }
+    
+    if(action > 0){
+        if(action_timeout < millis()){
+            action_timeout = millis() + action_interval;
+            //uint8_t message[] = "FF-1";
+            uint8_t message[RH_NRF24_MAX_MESSAGE_LEN];
+            sprintf(message, "FF-%02d", action);
+
+            Serial.println((char *)message);
+            if(!manager.sendtoWait((uint8_t *)message, sizeof(message), CLIENT_ADDRESS)){
+                Serial.println("RF sendtoWait failed");
+            }
+            action = 0;
+        }
+    }*/
+
 
     compiler.run();
     
