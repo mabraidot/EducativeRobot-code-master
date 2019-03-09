@@ -1,78 +1,81 @@
 #include "config.h"
 #include "debug.h"
+#include "buzzer.h"
 #include "blocks.h"
 #include "compiler.h"
 #include "rf.h"
 
+Buzzer buzzer;
 Blocks blocks;
 Compiler compiler;
 RF rf;
 
 
 void process_serial(){
-  char cmd = Serial.read();
-  byte address;
-  if (cmd > 'Z') cmd -= 32;
-  switch (cmd) {
-    case 'H': help(); break;
-    case 'S': compiler.scanBlocks(); break;
-    case 'M': blocks.scanResults(); break;
-    case 'D': 
-        {
-            blocks.disable_slaves(); 
-            blocks.disable_function(); 
+    if(DEBUG){
+        char cmd = Serial.read();
+        byte address;
+        if (cmd > 'Z') cmd -= 32;
+        switch (cmd) {
+            case 'H': help(); break;
+            case 'S': compiler.scanBlocks(); break;
+            case 'M': blocks.scanResults(); break;
+            case 'D': 
+                {
+                    blocks.disable_slaves(); 
+                    blocks.disable_function(); 
+                }
+                break;
+            case 'L': 
+                {
+                    address = Serial.parseInt();
+                    byte mode = Serial.parseInt();
+                    blocks.flash_led(address, mode); 
+                }
+                break;
+            case 'V': 
+                {
+                    address = Serial.parseInt();
+                    byte reg = Serial.parseInt();
+                    byte value = Serial.parseInt();
+                    blocks.set_state(address, reg, value); 
+                }
+                break;
+            case 'E': 
+                {
+                    address = Serial.parseInt();
+                    byte reg = Serial.parseInt();
+                    blocks.read_state(address, reg); 
+                }
+                break;
+            case 'B': 
+                {
+                    address = Serial.parseInt();
+                    blocks.clear_eeprom(address); 
+                }
+                break;
+            case 'R': 
+                {
+                    address = Serial.parseInt();
+                    blocks.read_status(address); 
+                }
+                break;
+            case 'C': 
+                {
+                    address = Serial.parseInt();
+                    blocks.close_gate(address); 
+                }
+                break;
+            case 'O': 
+                {
+                    address = Serial.parseInt();
+                    blocks.open_gate(address); 
+                }
+                break;
         }
-        break;
-    case 'L': 
-        {
-            address = Serial.parseInt();
-            byte mode = Serial.parseInt();
-            blocks.flash_led(address, mode); 
-        }
-        break;
-    case 'V': 
-        {
-            address = Serial.parseInt();
-            byte reg = Serial.parseInt();
-            byte value = Serial.parseInt();
-            blocks.set_state(address, reg, value); 
-        }
-        break;
-    case 'E': 
-        {
-            address = Serial.parseInt();
-            byte reg = Serial.parseInt();
-            blocks.read_state(address, reg); 
-        }
-        break;
-    case 'B': 
-        {
-            address = Serial.parseInt();
-            blocks.clear_eeprom(address); 
-        }
-        break;
-    case 'R': 
-        {
-            address = Serial.parseInt();
-            blocks.read_status(address); 
-        }
-        break;
-    case 'C': 
-        {
-            address = Serial.parseInt();
-            blocks.close_gate(address); 
-        }
-        break;
-    case 'O': 
-        {
-            address = Serial.parseInt();
-            blocks.open_gate(address); 
-        }
-        break;
-  }
-  
-  while (Serial.read() != 10); // dump extra characters till LF is seen (you can use CRLF or just LF)
-
+        
+        while (Serial.read() != 10); // dump extra characters till LF is seen (you can use CRLF or just LF)
+    }
 }
 
 
@@ -96,21 +99,25 @@ void help(){
 
 void setup()
 {
-    Serial.begin(115200);
+    if(DEBUG){
+        Serial.begin(9600);
+    }
 
+    buzzer.init();
     blocks.init();
     compiler.init();
     rf.init();
 
     // wait for slave to finish any init sequence
     delay(2000);
-  
+    
+    buzzer.startUp();
 }
 
 void loop()
 {
     if (Serial.available()) process_serial();
-
+    
     compiler.run();
     
 }

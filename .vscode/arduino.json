@@ -2,5 +2,5 @@
     "board": "arduino:avr:uno",
     "port": "COM6",
     "sketch": "EducativeRobot-code-master.ino",
-    "programmer": "USBasp"
+    "programmer": "AVRISP mkII"
 }
