@@ -16,34 +16,35 @@ void RF::init(void){
 
     uint8_t _buffer[RH_NRF24_MAX_MESSAGE_LEN] = {0};
     if (!manager.init()){
-        debug.println("RF init failed");
+        debug.println(F("RF init failed"));
     }
 
 }
 
 
-void RF::sendMessage(uint8_t *message){
+boolean RF::sendMessage(uint8_t *message){
 
-    uint8_t text[RH_NRF24_MAX_MESSAGE_LEN];
+    uint8_t text[RH_NRF24_MAX_MESSAGE_LEN] = {0};
     strcpy(text, message);
     
-    debug.print("Sending: ");
+    debug.print(F("RF Sending: "));
     debug.println((char *)text);
-    if (manager.sendtoWait(text, sizeof(text), RF_CLIENT_ADDRESS)){
-        //if (manager.recvfromAckTimeout(_buffer, &_len, 2000, &_from)){
-        if(receiveMessageTimeout()){
-            debug.print("Response: ");
-            debug.println((char *)_buffer);
-            sent = true;
-        }else{
-            debug.println("RF No reply, is nrf24_reliable_datagram_client running?");
-            sent = false;
-        }
+    if (manager.sendtoWait((uint8_t *)text, sizeof(text), RF_CLIENT_ADDRESS)){
+        sent = true;
     }else{
-        debug.println("RF sendtoWait failed");
+        debug.println(F("RF sendtoWait failed"));
         sent = false;
     }
+    return sent;
+}
 
+
+boolean RF::sendMessage(byte number){
+
+    uint8_t message[RH_NRF24_MAX_MESSAGE_LEN] = {0};
+    sprintf(message, "%02d", number);
+
+    return sendMessage(message);
 }
 
 
@@ -56,11 +57,11 @@ boolean RF::receiveMessage(void){
 }
 
 
-boolean RF::receiveMessageTimeout(void){
+boolean RF::receiveMessageTimeout(uint16_t timeout){
 
     uint8_t _buffer[RH_NRF24_MAX_MESSAGE_LEN] = {0};
 
-    return manager.recvfromAckTimeout(_buffer, &_len, 2000, &_from);
+    return manager.recvfromAckTimeout(_buffer, &_len, timeout, &_from);
     
 }
 
@@ -73,15 +74,5 @@ byte RF::getNumberFromMessage(uint8_t *message, byte units){
         number += ( (byte)message[( units-i-1 )] - 48 ) * pow(10,i);
     }
     return number;
-
-}
-
-
-uint8_t RF::getMessageFromNumber(byte number){
-
-    uint8_t message[3];
-    sprintf(message, "%02d", number);
-
-    return message;
 
 }

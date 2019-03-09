@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "blocks.h"
 #include "compiler.h"
+#include "rf.h"
 
 
 /*--------------------------------------*/
@@ -28,9 +29,6 @@ void Compiler::run(void){
         }else{
             _steps_busy = true;
             _led(STEPS_LED, STATE_LED_ON);
-
-            // DEMO
-            blink_timeout = millis() + blink_interval;
         }
     }
 
@@ -56,12 +54,7 @@ void Compiler::run(void){
 
         // Run the program
         if(!_busy){
-            if(_next()){
-                
-                // DEMO
-                blink_timeout = millis() + blink_interval;
-
-            }else{
+            if(!_next()){
                 _busy = false;
                 _compiled = false;
                 _queue = 0;
@@ -245,11 +238,13 @@ boolean Compiler::_next(void){
 
 void Compiler::_execute(void){
 
-    byte current_address = 0;
+    byte current_address, current_type = 0;
     if(_function_flag){
         current_address = blocks._functions[_queue].address;
+        current_type = blocks._functions[_queue].type;
     }else{
         current_address = blocks._blocks[_queue].address;
+        current_type = blocks._blocks[_queue].type;
     }
     
     // If function execution is over, return to the next step
@@ -264,25 +259,26 @@ void Compiler::_execute(void){
         blocks.flash_led(current_address, STATE_LED_BLINK);
     }
 
-
-    /***** DEMO *******/
-    // Do something ...
-
-    // End of execution
-    if(blink_timeout < millis()){
-        debug.print((_function_flag) ? F("Executed function: ") : F("Executed: "));
-        debug.println(current_address);
-    
-        
-        blink_timeout = millis() + blink_interval;
-
-
-        _busy = false;
-        _steps_busy = false;
-
+    // Start RF transmission, if not started yet
+    if(!rf.sent){
+        if(!rf.sendMessage(current_type)){
+            // Action timed out so rise an error. At the moment, cancel transmission
+            _busy = false;
+            _steps_busy = false;
+        }
+    }else{
+        if(rf.receiveMessageTimeout( RF_WAIT_TIMEOUT )){
+            // Robot car action finished
+            rf.sent = false;
+            _busy = false;
+            _steps_busy = false;
+        }else{
+            // Action timed out so rise an error. At the moment, cancel transmission
+            rf.sent = false;
+            _busy = false;
+            _steps_busy = false;
+        }
     }
-    /***** END DEMO *******/
-   
     
 }
 

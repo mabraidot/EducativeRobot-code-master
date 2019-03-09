@@ -13,6 +13,9 @@ class Debug {
         void print(byte message);
         void println(byte message);
 
+        void print(char *message);
+        void println(char *message);
+
 };
 
 extern Debug debug;

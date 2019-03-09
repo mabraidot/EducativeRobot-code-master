@@ -25,3 +25,15 @@ void Debug::println(byte message){
         Serial.println(message);
     }
 }
+
+void Debug::print(char *message){
+    if(DEBUG){
+        Serial.print(message);
+    }
+}
+
+void Debug::println(char *message){
+    if(DEBUG){
+        Serial.println(message);
+    }
+}

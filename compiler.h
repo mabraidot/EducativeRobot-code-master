@@ -10,10 +10,6 @@ class Compiler {
         void init(void);
         void run(void);
         void scanBlocks(void);
-
-        //DEMO
-        int blink_interval = 2000;
-        unsigned long blink_timeout = millis() + blink_interval;
         
     private:
 
