@@ -111,13 +111,15 @@ void setup()
     // wait for slave to finish any init sequence
     delay(2000);
     
-    buzzer.startUp();
+    //buzzer.startUp();
+    buzzer.startSound();
 }
 
 void loop()
 {
     if (Serial.available()) process_serial();
     
+    buzzer.error();
     compiler.run();
     
 }

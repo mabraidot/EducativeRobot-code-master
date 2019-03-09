@@ -8,6 +8,9 @@ class Buzzer {
         Buzzer() {};
 
         void init(void);
+        void startSound(void);
+        void stopSound(void);
+
         void startUp(void);
         void error(void);
 
@@ -20,8 +23,8 @@ class Buzzer {
         void _note(byte index, uint16_t frequency, uint16_t duration);
 
         byte _melody_index = 0;
-        unsigned long _duration_timeout = 0;
-        unsigned long _current_time = 0;
+        //unsigned long _duration_timeout = 0;
+        //unsigned long _current_time = 0;
         unsigned long _previous_time = 0;
 
 };
