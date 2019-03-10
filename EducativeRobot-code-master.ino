@@ -115,11 +115,29 @@ void setup()
     buzzer.startSound();
 }
 
+//int waiting = 3000;
+//unsigned long waiting_timeout = millis();
+//byte song = 0;
 void loop()
 {
     if (Serial.available()) process_serial();
     
-    buzzer.error();
     compiler.run();
+    
+    /*if(millis() > (waiting_timeout + waiting)){
+        waiting_timeout = millis();
+        buzzer.startSound();
+        song++;
+    }
+    switch(song){
+        case 1: buzzer.startUp(); break;
+        case 2: buzzer.error(); break;
+        case 3: buzzer.compilationOk(); break;
+        case 4: buzzer.blockExecutionBegining(); break;
+        case 5: buzzer.blockExecutionRunning(); break;
+        case 6: buzzer.executionEnd(); break;
+        default: break;
+    }*/
+    
     
 }

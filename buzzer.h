@@ -20,12 +20,11 @@ class Buzzer {
         void executionEnd(void);
 
     private:
-        void _note(byte index, uint16_t frequency, uint16_t duration);
+        void _note(byte index, uint16_t frequency, uint32_t duration);
 
         byte _melody_index = 0;
-        //unsigned long _duration_timeout = 0;
-        //unsigned long _current_time = 0;
         unsigned long _previous_time = 0;
+
 
 };
 
