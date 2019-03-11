@@ -4,6 +4,7 @@
 #include "blocks.h"
 #include "compiler.h"
 #include "rf.h"
+#include "buzzer.h"
 
 
 /*--------------------------------------*/
@@ -22,6 +23,7 @@ void Compiler::run(void){
     // Step by step run
     if(digitalRead(STEPS_BUTTON) == LOW){
         if(!_compiled){
+            _queue = 0;
             _steps_flag = true;
             _led(STEPS_LED, STATE_LED_ON);
             scanBlocks();
@@ -42,6 +44,7 @@ void Compiler::run(void){
     if(!_compiled){
         // One step run
         if(digitalRead(RUN_BUTTON) == LOW){
+            _queue = 0;
             _steps_flag = false;
             _steps_busy = false;
             _led(RUN_LED, STATE_LED_ON);
@@ -63,6 +66,7 @@ void Compiler::run(void){
                 _steps_busy = false;
                 blocks.disable_function();
                 blocks.disable_slaves();
+                buzzer.executionEnd();
             }
         }else{
             if(!_steps_flag || _steps_busy){
@@ -220,7 +224,7 @@ boolean Compiler::_next(void){
             
             }
             _busy = true;
-
+            
             return true;
     }else{
         if(_function_flag){
@@ -257,7 +261,9 @@ void Compiler::_execute(void){
     // Flash the led while the block is being executed
     if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
         blocks.flash_led(current_address, STATE_LED_BLINK);
+        buzzer.blockExecutionBegining();
     }
+    //buzzer.blockExecutionRunning();
 
     // Start RF transmission, if not started yet
     if(!rf.sent){
@@ -265,6 +271,10 @@ void Compiler::_execute(void){
             // Action timed out so rise an error. At the moment, cancel transmission
             _busy = false;
             _steps_busy = false;
+            _compiled = false;
+            blocks.disable_function();
+            blocks.disable_slaves();
+            buzzer.error();
         }
     }else{
         if(rf.receiveMessageTimeout( RF_WAIT_TIMEOUT )){
@@ -277,6 +287,10 @@ void Compiler::_execute(void){
             rf.sent = false;
             _busy = false;
             _steps_busy = false;
+            _compiled = false;
+            blocks.disable_function();
+            blocks.disable_slaves();
+            buzzer.error();
         }
     }
     
@@ -401,6 +415,8 @@ void Compiler::scanBlocks(void){
     blocks.off_leds(false);
 
     _compiled = true;
+
+    buzzer.compilationOk();
 }
 
 

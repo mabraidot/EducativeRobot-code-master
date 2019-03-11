@@ -36,79 +36,92 @@ void Buzzer::startSound(void){
 }
 
 
+// Blocking sound, using delay
 void Buzzer::error(void){
     
-    byte i = 0;
-    _note(i, 1243, 200000);    i++;
-    _note(i, 0, 50000);        i++; // White noise
-    _note(i, 1243, 200000);    i++;
-    _note(i, 0, 50000);        i++; // White noise
-    _note(i, 250, 500000);     i++;
+    startSound();
+
+    tone(BUZZER, 1250, 200);
+    delay(250);
+    tone(BUZZER, 1250, 200);
+    delay(250);
+    tone(BUZZER, 250, 500);
+    delay(500);
+    noTone(BUZZER);
+
 }
 
 
+// Blocking sound, using delay
 void Buzzer::startUp(void){
-    /*tone(BUZZER, 1500, 100);
-    delay(150);
     
-    tone(BUZZER, 3200, 100);
-    delay(150);
+    startSound();
     
-    tone(BUZZER, 2000, 100);
-    delay(150);
-
-    noTone(BUZZER);*/
     for(byte i = 0; i < 20; i+=2){
-        _note(i, 1500*sqrt((double)i), 200000/sqrt((double)i));
-        _note(i+1, 0, 50000/sqrt((double)i));
-        //tone(BUZZER, 1500*sqrt((double)i), 200000/sqrt((double)i));
-        //delay(50000/sqrt((double)i));
+        //_note(i, 1500*sqrt((double)i), 200000/sqrt((double)i));
+        //_note(i+1, 0, 50000/sqrt((double)i));
+        tone(BUZZER, 1500*sqrt((double)i), 200/sqrt((double)i));
+        delay(250/sqrt((double)i));
+        noTone(BUZZER);
     }
     
 
 }
 
 
+// Blocking sound, using delay
 void Buzzer::compilationOk(void){
     
-    byte i = 0;
-    _note(i, 2900, 50000);    i++;
-    _note(i, 0, 50000);       i++; // White noise
-    _note(i, 2900, 50000);    i++;
-    _note(i, 0, 50000);       i++; // White noise
+    startSound();
+
+    tone(BUZZER, 2900, 50);
+    delay(100);
+    tone(BUZZER, 2900, 50);
+    delay(100);
+    noTone(BUZZER);
 
 }
 
 
+// Blocking sound, using delay
 void Buzzer::blockExecutionBegining(void){
     
-    byte i = 0;
-    _note(i, 1900, 50000);    i++;
-    
+    startSound();
+
+    tone(BUZZER, 1900, 50);
+    delay(100);
+    noTone(BUZZER);
+
 }
 
 
 void Buzzer::blockExecutionRunning(void){
 
-    //byte i = 0;
-    for(byte i = 0; i < 20; i+=2){
-        _note(i, 400, 80000);
-        _note(i+1, 0, 500000);
+    static unsigned long pause_interval = micros();
+    if(micros() > (pause_interval + 200000)){
+        pause_interval = micros();
+        startSound();
     }
+    _note(0, 400, 80000);
+    
 }
 
 
+// Blocking sound, using delay
 void Buzzer::executionEnd(void){
     
-    byte i = 0;
-    _note(i, 4000, 100000);   i++;
-    _note(i, 0, 40000);       i++; // White noise
-    _note(i, 1900, 50000);    i++;
-    _note(i, 0, 40000);       i++; // White noise
-    _note(i, 1900, 50000);    i++;
-    _note(i, 0, 40000);       i++; // White noise
-    _note(i, 4000, 80000);    i++;
-    _note(i, 0, 40000);       i++; // White noise
-    
+    startSound();
+
+    tone(BUZZER, 4000, 100);
+    delay(140);
+    tone(BUZZER, 1900, 50);
+    delay(90);
+    tone(BUZZER, 1900, 50);
+    delay(90);
+    tone(BUZZER, 4000, 80);
+    delay(120);
+
+    noTone(BUZZER);
+
 }
 
