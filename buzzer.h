@@ -24,6 +24,7 @@ class Buzzer {
 
         byte _melody_index = 0;
         unsigned long _previous_time = 0;
+        unsigned long _pause_interval = 0;
 
 
 };

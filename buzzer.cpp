@@ -106,9 +106,8 @@ void Buzzer::blockExecutionBegining(void){
 void Buzzer::blockExecutionRunning(void){
 
     if(!SILENT){
-        static unsigned long pause_interval = micros();
-        if(micros() > (pause_interval + 200000)){
-            pause_interval = micros();
+        if(micros() > (_pause_interval + 200000)){
+            _pause_interval = micros();
             startSound();
         }
         _note(0, 400, 80000);
