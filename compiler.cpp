@@ -37,7 +37,6 @@ void Compiler::run(void){
 
     if(_compiled && _steps_flag && !_steps_busy){
         _led(STEPS_LED, STATE_LED_BLINK);
-        buzzer.stopSound();
     }else if(!_compiled){
         _led(RUN_LED, STATE_LED_OFF);
         _led(STEPS_LED, STATE_LED_OFF);
@@ -74,6 +73,8 @@ void Compiler::run(void){
         }else{
             if(!_steps_flag || _steps_busy){
                 _execute();
+            }else if(_steps_flag && !_steps_busy){
+                _execute_paused();
             }
         }
     }
@@ -243,6 +244,24 @@ boolean Compiler::_next(void){
 }
 
 
+void Compiler::_execute_paused(void){
+    
+    byte current_address, current_type = 0;
+    if(_function_flag){
+        current_address = blocks._functions[_queue].address;
+        current_type = blocks._functions[_queue].type;
+    }else{
+        current_address = blocks._blocks[_queue].address;
+        current_type = blocks._blocks[_queue].type;
+    }
+    if(blocks.read_state(current_address, STATE_LED) != STATE_LED_OFF){
+        blocks.flash_led(current_address, STATE_LED_OFF);
+        buzzer.stopSound();
+    }
+
+}
+
+
 void Compiler::_execute(void){
 
     byte current_address, current_type = 0;
@@ -261,12 +280,6 @@ void Compiler::_execute(void){
         return;
     }
     
-    // Flash the led while the block is being executed
-    if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
-        blocks.flash_led(current_address, STATE_LED_BLINK);
-        buzzer.blockExecutionBegining();
-    }
-    
     // Start RF transmission, if not started yet
     if(!rf.sent){
         if(!rf.sendMessage(current_type)){
@@ -280,6 +293,11 @@ void Compiler::_execute(void){
         }
         _rf_waiting_timeout = millis();
     }else{
+        // Flash the led while the block is being executed
+        if(blocks.read_state(current_address, STATE_LED) != STATE_LED_BLINK){
+            blocks.flash_led(current_address, STATE_LED_BLINK);
+            buzzer.blockExecutionBegining();
+        }
         buzzer.blockExecutionRunning();
         if(rf.receiveMessage()){
             // Robot car action finished

@@ -28,6 +28,7 @@ class Compiler {
         
         boolean _next(void);
         void _execute(void);
+        void _execute_paused(void);
         void _led(byte pin, byte mode);
         
         byte _get_modifiers_count(boolean _function_flag, byte queue);
