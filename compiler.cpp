@@ -24,6 +24,7 @@ void Compiler::run(void){
     if(digitalRead(STEPS_BUTTON) == LOW){
         if(!_compiled){
             _queue = 0;
+            _queue_temp = 0;
             _steps_flag = true;
             _led(STEPS_LED, STATE_LED_ON);
             scanBlocks();
@@ -45,6 +46,7 @@ void Compiler::run(void){
         // One step run
         if(digitalRead(RUN_BUTTON) == LOW){
             _queue = 0;
+            _queue_temp = 0;
             _steps_flag = false;
             _steps_busy = false;
             _led(RUN_LED, STATE_LED_ON);
