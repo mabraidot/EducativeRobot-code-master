@@ -39,15 +39,17 @@ void Buzzer::startSound(void){
 // Blocking sound, using delay
 void Buzzer::error(void){
     
-    startSound();
+    if(!SILENT){
+        startSound();
 
-    tone(BUZZER, 1250, 200);
-    delay(250);
-    tone(BUZZER, 1250, 200);
-    delay(250);
-    tone(BUZZER, 250, 500);
-    delay(500);
-    noTone(BUZZER);
+        tone(BUZZER, 1250, 200);
+        delay(250);
+        tone(BUZZER, 1250, 200);
+        delay(250);
+        tone(BUZZER, 250, 500);
+        delay(500);
+        noTone(BUZZER);
+    }
 
 }
 
@@ -55,14 +57,16 @@ void Buzzer::error(void){
 // Blocking sound, using delay
 void Buzzer::startUp(void){
     
-    startSound();
-    
-    for(byte i = 0; i < 20; i+=2){
-        //_note(i, 1500*sqrt((double)i), 200000/sqrt((double)i));
-        //_note(i+1, 0, 50000/sqrt((double)i));
-        tone(BUZZER, 1500*sqrt((double)i), 200/sqrt((double)i));
-        delay(250/sqrt((double)i));
-        noTone(BUZZER);
+    if(!SILENT){
+        startSound();
+        
+        for(byte i = 0; i < 20; i+=2){
+            //_note(i, 1500*sqrt((double)i), 200000/sqrt((double)i));
+            //_note(i+1, 0, 50000/sqrt((double)i));
+            tone(BUZZER, 1500*sqrt((double)i), 200/sqrt((double)i));
+            delay(250/sqrt((double)i));
+            noTone(BUZZER);
+        }
     }
     
 
@@ -72,13 +76,15 @@ void Buzzer::startUp(void){
 // Blocking sound, using delay
 void Buzzer::compilationOk(void){
     
-    startSound();
+    if(!SILENT){
+        startSound();
 
-    tone(BUZZER, 2900, 50);
-    delay(100);
-    tone(BUZZER, 2900, 50);
-    delay(100);
-    noTone(BUZZER);
+        tone(BUZZER, 2900, 50);
+        delay(100);
+        tone(BUZZER, 2900, 50);
+        delay(100);
+        noTone(BUZZER);
+    }
 
 }
 
@@ -86,23 +92,27 @@ void Buzzer::compilationOk(void){
 // Blocking sound, using delay
 void Buzzer::blockExecutionBegining(void){
     
-    startSound();
+    if(!SILENT){
+        startSound();
 
-    tone(BUZZER, 1900, 50);
-    delay(100);
-    noTone(BUZZER);
+        tone(BUZZER, 1900, 50);
+        delay(100);
+        noTone(BUZZER);
+    }
 
 }
 
 
 void Buzzer::blockExecutionRunning(void){
 
-    static unsigned long pause_interval = micros();
-    if(micros() > (pause_interval + 200000)){
-        pause_interval = micros();
-        startSound();
+    if(!SILENT){
+        static unsigned long pause_interval = micros();
+        if(micros() > (pause_interval + 200000)){
+            pause_interval = micros();
+            startSound();
+        }
+        _note(0, 400, 80000);
     }
-    _note(0, 400, 80000);
     
 }
 
@@ -110,18 +120,20 @@ void Buzzer::blockExecutionRunning(void){
 // Blocking sound, using delay
 void Buzzer::executionEnd(void){
     
-    startSound();
+    if(!SILENT){
+        startSound();
 
-    tone(BUZZER, 4000, 100);
-    delay(140);
-    tone(BUZZER, 1900, 50);
-    delay(90);
-    tone(BUZZER, 1900, 50);
-    delay(90);
-    tone(BUZZER, 4000, 80);
-    delay(120);
+        tone(BUZZER, 4000, 100);
+        delay(140);
+        tone(BUZZER, 1900, 50);
+        delay(90);
+        tone(BUZZER, 1900, 50);
+        delay(90);
+        tone(BUZZER, 4000, 80);
+        delay(120);
 
-    noTone(BUZZER);
+        noTone(BUZZER);
+    }
 
 }
 
