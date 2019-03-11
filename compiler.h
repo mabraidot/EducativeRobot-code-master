@@ -21,6 +21,7 @@ class Compiler {
         boolean _steps_flag = false;
         boolean _steps_busy = false;
         byte _loop = 0;
+        unsigned long _rf_waiting_timeout = 0;
 
         boolean _addSlave(boolean _function_mode, boolean _modifier_mode, byte _block_address, byte _block_position, byte _block_modifier_position);
         byte _scanI2CBuffer(byte _block_address, boolean _function_mode);
@@ -28,7 +29,7 @@ class Compiler {
         boolean _next(void);
         void _execute(void);
         void _led(byte pin, byte mode);
-
+        
         byte _get_modifiers_count(boolean _function_flag, byte queue);
         void _set_modifier_values(boolean _function_flag, byte queue, byte i, byte *_type, byte *_loop, byte *_old_value, byte *_address);
 

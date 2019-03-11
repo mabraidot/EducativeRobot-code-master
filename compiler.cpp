@@ -37,6 +37,7 @@ void Compiler::run(void){
 
     if(_compiled && _steps_flag && !_steps_busy){
         _led(STEPS_LED, STATE_LED_BLINK);
+        buzzer.stopSound();
     }else if(!_compiled){
         _led(RUN_LED, STATE_LED_OFF);
         _led(STEPS_LED, STATE_LED_OFF);
@@ -265,8 +266,7 @@ void Compiler::_execute(void){
         blocks.flash_led(current_address, STATE_LED_BLINK);
         buzzer.blockExecutionBegining();
     }
-    //buzzer.blockExecutionRunning();
-
+    
     // Start RF transmission, if not started yet
     if(!rf.sent){
         if(!rf.sendMessage(current_type)){
@@ -278,14 +278,17 @@ void Compiler::_execute(void){
             blocks.disable_slaves();
             buzzer.error();
         }
+        _rf_waiting_timeout = millis();
     }else{
-        if(rf.receiveMessageTimeout( RF_WAIT_TIMEOUT )){
+        buzzer.blockExecutionRunning();
+        if(rf.receiveMessage()){
             // Robot car action finished
             rf.sent = false;
             _busy = false;
             _steps_busy = false;
-        }else{
-            // Action timed out so rise an error. At the moment, cancel transmission
+        }else if(millis() > (_rf_waiting_timeout + RF_WAIT_TIMEOUT)){
+            _rf_waiting_timeout = millis();
+            // Action timed out so rise an error.
             rf.sent = false;
             _busy = false;
             _steps_busy = false;
@@ -294,6 +297,7 @@ void Compiler::_execute(void){
             blocks.disable_slaves();
             buzzer.error();
         }
+
     }
     
 }
