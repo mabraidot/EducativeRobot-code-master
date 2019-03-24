@@ -282,7 +282,7 @@ void Compiler::_execute(void){
     
     // Start RF transmission, if not started yet
     if(!rf.sent){
-        if(!rf.sendMessage(current_type)){
+        if(!rf.sendMessage(current_type, false)){
             // Action timed out so rise an error. At the moment, cancel transmission
             _busy = false;
             _steps_busy = false;

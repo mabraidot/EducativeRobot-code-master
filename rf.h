@@ -8,8 +8,8 @@ class RF {
         RF() {};
 
         void init();
-        boolean sendMessage(uint8_t *message);
-        boolean sendMessage(byte number);
+        boolean sendMessage(uint8_t *message, bool ack);
+        boolean sendMessage(byte number, bool ack);
         boolean receiveMessage(void);
         boolean RF::receiveMessageTimeout(uint16_t timeout);
         byte getNumberFromMessage(uint8_t *message, byte units);
