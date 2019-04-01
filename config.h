@@ -28,11 +28,14 @@
 #define FUNCTION_MODIFIERS_COUNT    3
 
 // SLAVE MODES
-#define MODE_MODIFIER_LOOP          1
-#define MODE_SLAVE_FORWARD_ARROW    2
-#define MODE_SLAVE_LEFT_ARROW       2
-#define MODE_SLAVE_RIGHT_ARROW      3
-#define MODE_FUNCTION               4
+#define MODE_FUNCTION               1
+#define MODE_MODIFIER_LOOP          2
+#define MODE_SLAVE_FORWARD_ARROW    3
+#define MODE_SLAVE_BACKWARD_ARROW   4
+#define MODE_SLAVE_LEFT_ARROW       5
+#define MODE_SLAVE_RIGHT_ARROW      6
+#define MODE_SLAVE_LIGHT            7
+#define MODE_SLAVE_SOUND            8
 
 // SLAVE STATES
 #define STATE_ADDRESS               0
