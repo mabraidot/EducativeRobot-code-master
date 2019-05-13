@@ -34,7 +34,7 @@ boolean RF::sendMessage(uint8_t *message, bool ack){
             if(receiveMessageTimeout(2000)){
                 debug.print(F("RF ACK Response: "));
                 debug.println((char *)_buffer);
-                if(_buffer == "ACK"){
+                if(strcmp(_buffer, "ACK") == 0){
                     sent = true;
                 }else{
                     debug.println(F("RF No ACK reply"));

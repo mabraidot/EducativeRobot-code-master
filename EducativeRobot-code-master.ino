@@ -100,7 +100,7 @@ void help(){
 void setup()
 {
     if(DEBUG){
-        Serial.begin(9600);
+        Serial.begin(115200);
     }
 
     buzzer.init();

@@ -300,10 +300,10 @@ void Compiler::_execute(void){
         }
         buzzer.blockExecutionRunning();
         if(rf.receiveMessage()){
-            char response = rf.getBuffer();
+            char *response = rf.getBuffer();
             debug.print(F("Execution response: "));
             debug.println((char *)response);
-            if(response =='END'){
+            if(strcmp(response, "END") == 0){
                 // Robot car action finished
                 rf.sent = false;
                 _busy = false;
