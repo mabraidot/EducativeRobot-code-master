@@ -14,7 +14,7 @@ class RF {
         boolean sendMessage(byte number, bool ack);
         boolean sendMessage(char text[], bool ack);
         boolean receiveMessage(void);
-        boolean RF::receiveMessageTimeout(uint16_t timeout);
+        boolean receiveMessageTimeout(uint16_t timeout);
         byte getNumberFromMessage(byte start, byte units);
         char* getBuffer(void);
         
