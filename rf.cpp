@@ -30,17 +30,23 @@ boolean RF::sendMessage(uint8_t *message, bool ack){
     debug.println((char *)text);
     sent = false;
     if (manager.sendtoWait((uint8_t *)text, sizeof(text), RF_CLIENT_ADDRESS)){
-        if(!ack){
+        if(ack){
             if(receiveMessageTimeout(2000)){
                 debug.print(F("RF ACK Response: "));
                 debug.println((char *)_buffer);
-                sent = true;
+                if(_buffer == "ACK"){
+                    sent = true;
+                }else{
+                    debug.println(F("RF No ACK reply"));
+                    sent = false;
+                }
             }else{
                 debug.println(F("RF No reply, is nrf24_reliable_datagram_client running?"));
                 sent = false;
             }
+        }else{
+            sent = true;
         }
-        sent = true;
     }else{
         debug.println(F("RF sendtoWait failed"));
         sent = false;
