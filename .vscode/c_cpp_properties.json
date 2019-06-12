@@ -6,15 +6,13 @@
                 "${workspaceRoot}",
                 "C:\\Users\\mabra\\AppData\\Local\\Arduino15\\packages\\arduino\\tools\\**",
                 "C:\\Users\\mabra\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.23\\**",
-                "C:\\Users\\mabra\\Documents\\Arduino\\libraries\\**",
-                "C:\\Users\\mabra\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.22\\**"
+                "C:\\Users\\mabra\\Documents\\Arduino\\libraries\\**"
             ],
             "defines": [
                 "UBRRH"
             ],
             "forcedInclude": [
-                "C:\\Users\\mabra\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.23\\cores\\arduino\\Arduino.h",
-                "C:\\Users\\mabra\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.22\\cores\\arduino\\Arduino.h"
+                "C:\\Users\\mabra\\AppData\\Local\\Arduino15\\packages\\arduino\\hardware\\avr\\1.6.23\\cores\\arduino\\Arduino.h"
             ],
             "intelliSenseMode": "msvc-x64",
             "compilerPath": "C:/Program Files (x86)/Microsoft Visual Studio/2017/Community/VC/Tools/MSVC/14.12.25827/bin/Hostx64/x64/cl.exe",
