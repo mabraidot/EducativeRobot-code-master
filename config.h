@@ -18,7 +18,8 @@
 // RF
 #define RF_CLIENT_ADDRESS           1
 #define RF_SERVER_ADDRESS           2
-#define RF_WAIT_TIMEOUT             7000 // milliseconds
+#define RF_WAIT_TIMEOUT             7000    // milliseconds
+#define RF_WAIT_LONG_TIMEOUT        120000  // milliseconds
 
 
 // LIMITS

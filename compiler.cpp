@@ -309,7 +309,7 @@ void Compiler::_execute(void){
                 _busy = false;
                 _steps_busy = false;
             }
-        }else if(millis() > (_rf_waiting_timeout + RF_WAIT_TIMEOUT)){
+        }else if(millis() > (_rf_waiting_timeout + ((current_type == MODE_SLAVE_LIGHT || current_type == MODE_SLAVE_SOUND) ? RF_WAIT_LONG_TIMEOUT : RF_WAIT_TIMEOUT) )){
             _rf_waiting_timeout = millis();
             // Action timed out so rise an error.
             rf.sent = false;
