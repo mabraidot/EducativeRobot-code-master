@@ -35,8 +35,8 @@
 #define MODE_SLAVE_BACKWARD_ARROW   4
 #define MODE_SLAVE_LEFT_ARROW       5
 #define MODE_SLAVE_RIGHT_ARROW      6
-#define MODE_SLAVE_LIGHT            7
-#define MODE_SLAVE_SOUND            8
+#define MODE_SLAVE_WAIT_LIGHT       7
+#define MODE_SLAVE_WAIT_SOUND       8
 
 // SLAVE STATES
 #define STATE_ADDRESS               0
