@@ -55,11 +55,12 @@ boolean RF::sendMessage(uint8_t *message, bool ack){
 }
 
 
-boolean RF::sendMessage(byte number, bool ack){
+boolean RF::sendMessage(byte number, byte value, bool ack){
 
     uint8_t message[RH_NRF24_MAX_MESSAGE_LEN] = {0};
-    sprintf(message, "%02d", number);
-
+    sprintf(message, "%02d%02d", number, value);
+    debug.print(F("Sending char: "));
+    debug.println((char *)message);
     return sendMessage(message, ack);
 }
 
@@ -96,10 +97,10 @@ char* RF::getBuffer(){
 
 byte RF::getNumberFromMessage(byte start, byte units){
 
-    //byte number = ((byte)message[0]-48)*10 + (byte)message[1]-48; //start=0, units=2
+    //byte number = (message[0]-48)*10 + (message[1]-48)*1; //start=0, units=2
     byte number = 0;
-    for(byte i = start; i < units; i++){
-        number += ( (byte)_buffer[( units-i-1 )] - 48 ) * pow(10,i);
+    for(byte i = 0; i < units; i++){
+        number += ( (byte)_buffer[( units - i - 1 + start )] - 48 ) * pow(10,i);
     }
     return number;
 

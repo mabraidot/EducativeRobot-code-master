@@ -264,13 +264,15 @@ void Compiler::_execute_paused(void){
 
 void Compiler::_execute(void){
 
-    byte current_address, current_type = 0;
+    byte current_address, current_type, current_value = 0;
     if(_function_flag){
         current_address = blocks._functions[_queue].address;
         current_type = blocks._functions[_queue].type;
+        current_value = blocks._functions[_queue].value;
     }else{
         current_address = blocks._blocks[_queue].address;
         current_type = blocks._blocks[_queue].type;
+        current_value = blocks._blocks[_queue].value;
     }
     
     // If function execution is over, return to the next step
@@ -282,7 +284,7 @@ void Compiler::_execute(void){
     
     // Start RF transmission, if not started yet
     if(!rf.sent){
-        if(!rf.sendMessage(current_type, true)){
+        if(!rf.sendMessage(current_type, current_value, true)){
             // Action timed out so rise an error. At the moment, cancel transmission
             _busy = false;
             _steps_busy = false;
