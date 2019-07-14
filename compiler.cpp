@@ -61,14 +61,29 @@ void Compiler::run(void){
         if(!_busy){
             if(!_next()){
                 _busy = false;
-                _compiled = false;
                 _queue = 0;
                 _queue_temp = 0;
                 _steps_flag = false;
-                _steps_busy = false;
+                //_compiled = false;
+                //_steps_busy = false;
                 blocks.disable_function();
                 blocks.disable_slaves();
-                buzzer.executionEnd();
+                //buzzer.executionEnd();
+
+                if(!rf.sent){
+                    rf.sendMessage(MODE_END_OF_PROGRAM, 0, true);
+                }else{
+                    if(rf.receiveMessageTimeout(1000)){
+                        _compiled = false;
+                        buzzer.executionEnd();
+                        char *response = rf.getBuffer();
+                        debug.print(F("Execution response: "));
+                        debug.println((char *)response);
+                        rf.sent = false;
+                        _steps_busy = false;
+                    }
+                }
+                
             }
         }else{
             if(!_steps_flag || _steps_busy){
