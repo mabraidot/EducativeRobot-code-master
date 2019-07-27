@@ -23,10 +23,10 @@
 
 
 // LIMITS
-#define SLAVES_COUNT                20
-#define SLAVES_MODIFIERS_COUNT      3
-#define FUNCTION_COUNT              10
-#define FUNCTION_MODIFIERS_COUNT    3
+#define SLAVES_COUNT                15
+#define SLAVES_MODIFIERS_COUNT      2
+#define FUNCTION_COUNT              8
+#define FUNCTION_MODIFIERS_COUNT    2
 
 // SLAVE MODES
 #define MODE_FUNCTION               1
