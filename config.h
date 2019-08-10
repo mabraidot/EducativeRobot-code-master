@@ -27,6 +27,7 @@
 #define SLAVES_MODIFIERS_COUNT      2
 #define FUNCTION_COUNT              8
 #define FUNCTION_MODIFIERS_COUNT    2
+#define WHILE_LOOPS_COUNT           3
 
 // SLAVE MODES
 #define MODE_FUNCTION               1

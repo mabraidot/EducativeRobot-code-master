@@ -54,6 +54,14 @@ class Blocks {
 
         _slaveBlock _blocks[SLAVES_COUNT+1]; // 1-indexed
 
+
+        typedef struct {
+            byte start;
+            byte end;
+        } _whileBlock;
+
+        _whileBlock _while[WHILE_LOOPS_COUNT];
+
         /**
          * Array of state values from slaves
          * Pos 0 -> Set new I2C address

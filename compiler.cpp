@@ -467,10 +467,10 @@ void Compiler::scanBlocks(void){
     blocks.enable_slaves();
     _block_address = _scanI2CBuffer(_block_address, false);
 
-    blocks.scanResults();
     blocks.off_leds(false);
-
     byte non_closing_while = blocks.checkWhileStructure();
+    blocks.scanResults();
+    
     if(!non_closing_while){
         _compiled = true;
         buzzer.compilationOk();
