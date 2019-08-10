@@ -71,7 +71,11 @@ void Compiler::run(void){
                 //buzzer.executionEnd();
 
                 if(!rf.sent){
-                    rf.sendMessage(MODE_END_OF_PROGRAM, 0, true);
+                    if(!rf.sendMessage(MODE_END_OF_PROGRAM, 0, true)){
+                        _steps_busy = false;
+                        _compiled = false;
+                        buzzer.executionEnd();
+                    }
                 }else{
                     if(rf.receiveMessageTimeout(1000)){
                         _compiled = false;
@@ -466,9 +470,22 @@ void Compiler::scanBlocks(void){
     blocks.scanResults();
     blocks.off_leds(false);
 
-    _compiled = true;
+    byte non_closing_while = blocks.checkWhileStructure();
+    if(!non_closing_while){
+        _compiled = true;
+        buzzer.compilationOk();
+    }else{
+        buzzer.error();
+        blocks.flash_led(non_closing_while,STATE_LED_BLINK);
+        delay(3000);
+        blocks.flash_led(non_closing_while,STATE_LED_OFF);
+        delay(50);
 
-    buzzer.compilationOk();
+        blocks.disable_function();
+        blocks.disable_slaves();
+        blocks.empty_blocks();
+
+    }
 }
 
 

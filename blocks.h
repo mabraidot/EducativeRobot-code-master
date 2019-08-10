@@ -12,6 +12,7 @@ class Blocks {
         void scanResults(void);
         void off_leds(boolean function_only);
         bool slaveExists(byte address);
+        byte checkWhileStructure(void);
 
         void add_slave(const byte old_address, byte address);
         void enable_slaves(void);

@@ -98,6 +98,67 @@ void Blocks::scanResults(void){
 }
 
 
+byte Blocks::checkWhileStructure(void){
+    /*
+    when there is an opening, push address to array
+    when there is a closing, pop the last address from the array,
+    if the array is empty, ??? maybe return error right away.
+
+    At the end, return the first address from the array. It's the error signal,
+    or zero, it's all good.
+    */
+    byte address[5] = {0};
+    byte address_index = 0;
+    for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
+        if(_functions[i].address){
+            if(_functions[i].type == MODE_WHILE_START){
+                address[address_index] = _functions[i].address;
+                address_index++;
+            }
+            if(_functions[i].type == MODE_WHILE_END){
+                if(address_index > 0){
+                    address_index--;
+                    address[address_index] = 0;
+                }else{
+                    address[address_index] = _functions[i].address;
+                    address_index++;
+                    break;
+                }
+            }
+        }
+    }
+    // If there isn't any error on functions, we continue with blocks
+    if(address_index == 0){
+        for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
+            if(_blocks[i].address){
+                if(_blocks[i].type == MODE_WHILE_START){
+                    address[address_index] = _blocks[i].address;
+                    address_index++;
+                }
+                if(_blocks[i].type == MODE_WHILE_END){
+                    if(address_index > 0){
+                        address_index--;
+                        address[address_index] = 0;
+                    }else{
+                        address[address_index] = _blocks[i].address;
+                        address_index++;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    // Returns the address of the mismatched while block
+    debug.print(F("While non-closing index: "));
+    debug.println(address_index);
+    debug.println(F("While non-closing structure: "));
+    for(byte j=0; j<5; j++){
+        debug.println(address[j]);
+    }
+    return address[0];
+}
+
+
 bool Blocks::slaveExists(byte address){
     bool found = false;
     for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
