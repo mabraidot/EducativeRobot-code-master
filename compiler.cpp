@@ -467,8 +467,8 @@ void Compiler::scanBlocks(void){
     blocks.enable_slaves();
     _block_address = _scanI2CBuffer(_block_address, false);
 
-    blocks.off_leds(false);
     byte non_closing_while = blocks.checkWhileStructure();
+    blocks.off_leds(false);
     blocks.scanResults();
     
     if(!non_closing_while){

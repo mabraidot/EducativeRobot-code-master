@@ -60,7 +60,7 @@ class Blocks {
             byte end;
         } _whileBlock;
 
-        _whileBlock _while[WHILE_LOOPS_COUNT];
+        _whileBlock _while[WHILE_LOOPS_COUNT+1];
 
         /**
          * Array of state values from slaves

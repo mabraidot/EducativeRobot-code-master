@@ -113,9 +113,9 @@ void Blocks::scanResults(void){
 
 byte Blocks::checkWhileStructure(void){
     
-    byte while_array_index = 0;
+    int while_array_index = 1;
 
-    byte address[5] = {0};
+    byte address[WHILE_LOOPS_COUNT*2] = {0};
     byte address_index = 0;
     for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
         if(_functions[i].address){
@@ -123,10 +123,13 @@ byte Blocks::checkWhileStructure(void){
                 address[address_index] = _functions[i].address;
                 address_index++;
 
-                while(_while[while_array_index].start && while_array_index < WHILE_LOOPS_COUNT){
+                while(_while[while_array_index].start > 0 && while_array_index < (WHILE_LOOPS_COUNT+1)){
                     while_array_index++;
                 }
                 _while[while_array_index].start = _functions[i].address;
+                //debug.print(while_array_index);
+                //debug.print(" - ");
+                //debug.println(_while[while_array_index].start);
                 
             }
             if(_functions[i].type == MODE_WHILE_END){
@@ -134,10 +137,13 @@ byte Blocks::checkWhileStructure(void){
                     address_index--;
                     address[address_index] = 0;
 
-                    while(_while[while_array_index].end && while_array_index >= 0){
+                    while(_while[while_array_index].end > 0 && while_array_index > 0){
                         while_array_index--;
                     }
                     _while[while_array_index].end = _functions[i].address;
+                    //debug.print(while_array_index);
+                    //debug.print(" - ");
+                    //debug.println(_while[while_array_index].end);
 
                 }else{
                     address[address_index] = _functions[i].address;
@@ -155,10 +161,13 @@ byte Blocks::checkWhileStructure(void){
                     address[address_index] = _blocks[i].address;
                     address_index++;
 
-                    while(_while[while_array_index].start && while_array_index < WHILE_LOOPS_COUNT){
+                    while(_while[while_array_index].start > 0 && while_array_index < (WHILE_LOOPS_COUNT+1)){
                         while_array_index++;
                     }
                     _while[while_array_index].start = _blocks[i].address;
+                    //debug.print(while_array_index);
+                    //debug.print(" - ");
+                    //debug.println(_while[while_array_index].start);
                     
                 }
                 if(_blocks[i].type == MODE_WHILE_END){
@@ -166,10 +175,13 @@ byte Blocks::checkWhileStructure(void){
                         address_index--;
                         address[address_index] = 0;
 
-                        while(_while[while_array_index].end && while_array_index >= 0){
+                        while(_while[while_array_index].end > 0 && while_array_index > 0){
                             while_array_index--;
                         }
                         _while[while_array_index].end = _blocks[i].address;
+                        //debug.print(while_array_index);
+                        //debug.print(" - ");
+                        //debug.println(_while[while_array_index].end);
                         
                     }else{
                         address[address_index] = _blocks[i].address;
@@ -181,12 +193,12 @@ byte Blocks::checkWhileStructure(void){
         }
     }
     // Returns the address of the mismatched while block
-    //debug.print(F("While non-closing index: "));
-    //debug.println(address_index);
-    //debug.println(F("While non-closing structure: "));
-    for(byte j=0; j<5; j++){
+    /*debug.print(F("While non-closing index: "));
+    debug.println(address_index);
+    debug.println(F("While non-closing structure: "));
+    for(byte j=0; j<(WHILE_LOOPS_COUNT*2); j++){
         debug.println(address[j]);
-    }
+    }*/
     return address[0];
 }
 
