@@ -155,7 +155,7 @@ byte Blocks::checkWhileStructure(void){
     }
     // If there isn't any error on functions, we continue with blocks
     if(address_index == 0){
-        for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
+        for( byte i = 1; i <= SLAVES_COUNT; i++ ){
             if(_blocks[i].address){
                 if(_blocks[i].type == MODE_WHILE_START){
                     address[address_index] = _blocks[i].address;
