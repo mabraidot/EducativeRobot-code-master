@@ -71,7 +71,7 @@ void Compiler::run(void){
                 //buzzer.executionEnd();
 
                 if(!rf.sent){
-                    if(!rf.sendMessage(MODE_END_OF_PROGRAM, 0, true)){
+                    if(!rf.sendMessage(MODE_END_OF_PROGRAM, 0, 0, true)){
                         _steps_busy = false;
                         _compiled = false;
                         buzzer.executionEnd();
@@ -340,6 +340,15 @@ boolean Compiler::_next(void){
                     if(_queue_while_end == 0){
                         _queue_while_end = _get_while_queue_end_by_start(_queue, _function_flag);
                     }
+                    // Is a starting while block so let its led on
+                    if(_function_flag && blocks._functions[_queue].address){
+                        blocks.flash_led(blocks._functions[_queue].address, STATE_LED_ON);
+                        delay(50);
+                    }else if(blocks._blocks[_queue].address){
+                        blocks.flash_led(blocks._blocks[_queue].address, STATE_LED_ON);
+                        delay(50);
+                    }
+                    _queue++;
             }
             // If we are exiting of a while loop
             if((_function_flag && blocks._functions[_queue].type == MODE_WHILE_END)
@@ -362,8 +371,9 @@ boolean Compiler::_next(void){
                     if(_queue_while_start == 0){
                         _queue_while_start = _get_while_queue_start_by_end(_queue, _function_flag);
                     }
-                    _queue = _queue_while_start;
-                    _turn_off_leds_inside_while_loop(_queue_while_start, _queue_while_end, _function_flag);
+                    // Start again on the first block inside the while-loop
+                    _queue = _queue_while_start + 1;
+                    _turn_off_leds_inside_while_loop(_queue_while_start + 1, _queue_while_end, _function_flag);
             }
             _busy = true;
             
@@ -422,7 +432,7 @@ void Compiler::_execute(void){
     
     // Start RF transmission, if not started yet
     if(!rf.sent){
-        if(!rf.sendMessage(current_type, current_value, true)){
+        if(!rf.sendMessage(current_type, current_value, _queue_while_start, true)){
             // Action timed out so rise an error. At the moment, cancel transmission
             _busy = false;
             _steps_busy = false;

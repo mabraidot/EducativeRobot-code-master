@@ -11,8 +11,8 @@ class RF {
 
         void init();
         boolean sendMessage(uint8_t *message, bool ack);
-        boolean sendMessage(byte number, bool ack);
-        boolean sendMessage(byte number, byte value, bool ack);
+        //boolean sendMessage(byte number, bool ack);
+        boolean sendMessage(byte number, byte value, byte while_block, bool ack);
         boolean sendMessage(char text[], bool ack);
         boolean receiveMessage(void);
         boolean receiveMessageTimeout(uint16_t timeout);

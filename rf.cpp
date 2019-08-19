@@ -55,10 +55,10 @@ boolean RF::sendMessage(uint8_t *message, bool ack){
 }
 
 
-boolean RF::sendMessage(byte number, byte value, bool ack){
+boolean RF::sendMessage(byte number, byte value, byte while_block, bool ack){
 
     uint8_t message[RH_NRF24_MAX_MESSAGE_LEN] = {0};
-    sprintf(message, "%02d%02d", number, value);
+    sprintf(message, "%02d%02d%02d", number, value, while_block);
     debug.print(F("Sending char: "));
     debug.println((char *)message);
     return sendMessage(message, ack);

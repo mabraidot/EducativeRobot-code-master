@@ -193,12 +193,6 @@ byte Blocks::checkWhileStructure(void){
         }
     }
     // Returns the address of the mismatched while block
-    /*debug.print(F("While non-closing index: "));
-    debug.println(address_index);
-    debug.println(F("While non-closing structure: "));
-    for(byte j=0; j<(WHILE_LOOPS_COUNT*2); j++){
-        debug.println(address[j]);
-    }*/
     return address[0];
 }
 
