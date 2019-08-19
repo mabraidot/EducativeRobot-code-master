@@ -349,7 +349,9 @@ boolean Compiler::_next(void){
                         blocks.flash_led(blocks._blocks[_queue].address, STATE_LED_ON);
                         delay(50);
                     }
-                    _queue++;
+                    //_queue++;
+                    _busy = false;
+                    return true;
             }
             // If we are exiting of a while loop
             if((_function_flag && blocks._functions[_queue].type == MODE_WHILE_END)
@@ -373,7 +375,7 @@ boolean Compiler::_next(void){
                         _queue_while_start = _get_while_queue_start_by_end(_queue, _function_flag);
                     }
                     // Start again on the first block inside the while-loop
-                    _queue = _queue_while_start + 1;
+                    _queue = _queue_while_start;
                     _turn_off_leds_inside_while_loop(_queue_while_start + 1, _queue_while_end, _function_flag);
             }
             if(_obstacle_flag && _queue_while_end > 0){
