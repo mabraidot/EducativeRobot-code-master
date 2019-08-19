@@ -145,6 +145,93 @@ void Compiler::_set_modifier_values(boolean _function_flag, byte queue, byte i, 
 }
 
 
+void Compiler::_turn_off_leds_inside_while_loop(byte _queue_while_start, byte _queue_while_end, boolean _function_flag){
+    
+    for( byte i = _queue_while_start; i <= _queue_while_end; i++ ){
+        if(_function_flag && blocks._functions[i].address){
+            blocks.flash_led(blocks._functions[i].address, STATE_LED_OFF);
+            delay(50);
+        }else if(!_function_flag && blocks._blocks[i].address){
+            blocks.flash_led(blocks._blocks[i].address, STATE_LED_OFF);
+            delay(50);
+        }
+    }
+    
+}
+
+
+byte Compiler::_get_while_queue_start_by_end(byte queue, boolean _function_flag){
+
+    byte end_queue = 0;
+    byte end_address = 0;
+    byte start_address = 0;
+
+    if(_function_flag && blocks._functions[queue].address){
+        end_address = blocks._functions[queue].address;
+    }else if(!_function_flag && blocks._blocks[queue].address){
+        end_address = blocks._blocks[queue].address;
+    }
+    // We are looking for the start address on the while structure
+    for( byte i = 1; i <= WHILE_LOOPS_COUNT; i++ ){
+        if(blocks._while[i].end == end_address){
+            start_address = blocks._while[i].start;
+        }
+    }
+    // Now that we have the address, we have to find out its queue position
+    if(_function_flag){
+        for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
+            if(blocks._functions[i].address && blocks._functions[i].address == start_address){
+                end_queue = i;
+            }
+        }
+    }else{
+        for( byte i = 1; i <= SLAVES_COUNT; i++ ){
+            if(blocks._blocks[i].address && blocks._blocks[i].address == start_address){
+                end_queue = i;
+            }
+        }
+    }
+
+    return end_queue;
+}
+
+
+byte Compiler::_get_while_queue_end_by_start(byte queue, boolean _function_flag){
+
+    byte start_queue = 0;
+    byte end_address = 0;
+    byte start_address = 0;
+
+    if(_function_flag && blocks._functions[queue].address){
+        start_queue = blocks._functions[queue].address;
+    }else if(!_function_flag && blocks._blocks[queue].address){
+        start_queue = blocks._blocks[queue].address;
+    }
+    // We are looking for the start address on the while structure
+    for( byte i = 1; i <= WHILE_LOOPS_COUNT; i++ ){
+        if(blocks._while[i].start == start_queue){
+            end_address = blocks._while[i].end;
+        }
+    }
+    // Now that we have the address, we have to find out its queue position
+    if(_function_flag){
+        for( byte i = 1; i <= FUNCTION_COUNT; i++ ){
+            if(blocks._functions[i].address && blocks._functions[i].address == end_address){
+                start_queue = i;
+            }
+        }
+    }else{
+        for( byte i = 1; i <= SLAVES_COUNT; i++ ){
+            if(blocks._blocks[i].address && blocks._blocks[i].address == end_address){
+                start_queue = i;
+            }
+        }
+    }
+
+    return start_queue;
+}
+
+
 boolean Compiler::_next(void){
     
     _queue++;
@@ -245,6 +332,38 @@ boolean Compiler::_next(void){
                 blocks.flash_led(blocks._blocks[_queue_temp].address, STATE_LED_ON);
                 delay(50);
             
+            }
+            // If we are entering in a while loop
+            if((_function_flag && blocks._functions[_queue].type == MODE_WHILE_START)
+                || (!_function_flag && blocks._blocks[_queue].type == MODE_WHILE_START)){
+                    _queue_while_start = _queue;
+                    if(_queue_while_end == 0){
+                        _queue_while_end = _get_while_queue_end_by_start(_queue, _function_flag);
+                    }
+            }
+            // If we are exiting of a while loop
+            if((_function_flag && blocks._functions[_queue].type == MODE_WHILE_END)
+                || (!_function_flag && blocks._blocks[_queue].type == MODE_WHILE_END)){
+
+                    // It's the end of a while loop, flash its led
+                    if(_function_flag && blocks._functions[_queue].address){
+                        blocks.flash_led(blocks._functions[_queue].address, STATE_LED_ON);
+                        delay(100);
+                        blocks.flash_led(blocks._functions[_queue].address, STATE_LED_OFF);
+                        delay(50);
+                    }else if(blocks._blocks[_queue].address){
+                        blocks.flash_led(blocks._blocks[_queue].address, STATE_LED_ON);
+                        delay(100);
+                        blocks.flash_led(blocks._blocks[_queue].address, STATE_LED_OFF);
+                        delay(50);
+                    }
+
+                    _queue_while_end = _queue;
+                    if(_queue_while_start == 0){
+                        _queue_while_start = _get_while_queue_start_by_end(_queue, _function_flag);
+                    }
+                    _queue = _queue_while_start;
+                    _turn_off_leds_inside_while_loop(_queue_while_start, _queue_while_end, _function_flag);
             }
             _busy = true;
             

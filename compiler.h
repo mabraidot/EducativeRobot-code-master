@@ -17,6 +17,8 @@ class Compiler {
         boolean _busy = false;
         byte _queue = 0;
         byte _queue_temp = 0;
+        byte _queue_while_start = 0;
+        byte _queue_while_end = 0;
         boolean _function_flag = false;
         boolean _steps_flag = false;
         boolean _steps_busy = false;
@@ -33,6 +35,9 @@ class Compiler {
         
         byte _get_modifiers_count(boolean _function_flag, byte queue);
         void _set_modifier_values(boolean _function_flag, byte queue, byte i, byte *_type, byte *_loop, byte *_old_value, byte *_address);
+        byte _get_while_queue_start_by_end(byte queue, boolean _function_flag);
+        byte _get_while_queue_end_by_start(byte queue, boolean _function_flag);
+        void _turn_off_leds_inside_while_loop(byte _queue_while_start, byte _queue_while_end, boolean _function_flag);
 
 };
 
