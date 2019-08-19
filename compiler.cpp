@@ -336,6 +336,7 @@ boolean Compiler::_next(void){
             // If we are entering in a while loop
             if((_function_flag && blocks._functions[_queue].type == MODE_WHILE_START)
                 || (!_function_flag && blocks._blocks[_queue].type == MODE_WHILE_START)){
+                    _obstacle_flag = false;
                     _queue_while_start = _queue;
                     if(_queue_while_end == 0){
                         _queue_while_end = _get_while_queue_end_by_start(_queue, _function_flag);
@@ -375,10 +376,18 @@ boolean Compiler::_next(void){
                     _queue = _queue_while_start + 1;
                     _turn_off_leds_inside_while_loop(_queue_while_start + 1, _queue_while_end, _function_flag);
             }
+            if(_obstacle_flag && _queue_while_end > 0){
+                _queue = _queue_while_end + 1;
+                _obstacle_flag = false;
+                _queue_while_start = 0;
+                _queue_while_end = 0;
+                // TODO: scan for another while-loop containing this one just finished.
+            }
             _busy = true;
             
             return true;
     }else{
+        _obstacle_flag = false;
         if(_function_flag){
             _function_flag = false;
             _queue = _queue_temp;
@@ -458,7 +467,13 @@ void Compiler::_execute(void){
                 rf.sent = false;
                 _busy = false;
                 _steps_busy = false;
+            }else if(strcmp(response, "OBSTACLE") == 0){
+                rf.sent = false;
+                _busy = false;
+                _steps_busy = false;
+                _obstacle_flag = true;
             }
+
         }else if(millis() > (
             _rf_waiting_timeout + (
                 (current_type == MODE_SLAVE_WAIT_LIGHT || 

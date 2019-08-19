@@ -20,6 +20,7 @@ class Compiler {
         byte _queue_while_start = 0;
         byte _queue_while_end = 0;
         boolean _function_flag = false;
+        boolean _obstacle_flag = false;
         boolean _steps_flag = false;
         boolean _steps_busy = false;
         byte _loop = 0;
