@@ -23,11 +23,11 @@
 
 
 // LIMITS
-#define SLAVES_COUNT                15
+#define SLAVES_COUNT                12
 #define SLAVES_MODIFIERS_COUNT      2
-#define FUNCTION_COUNT              8
+#define FUNCTION_COUNT              6
 #define FUNCTION_MODIFIERS_COUNT    2
-#define WHILE_LOOPS_COUNT           3
+#define WHILE_LOOPS_COUNT           1
 
 // SLAVE MODES
 #define MODE_FUNCTION               1
@@ -59,7 +59,7 @@
 
 
 // GENERAL
-#define DEBUG                       true
+#define DEBUG                       false
 #define SILENT                      false
 // Button Debouncing (Kenneth A. Kuhn algorithm)
 #define DEBOUNCE_TIME               0.3
