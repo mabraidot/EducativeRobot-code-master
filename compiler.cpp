@@ -160,6 +160,21 @@ void Compiler::_turn_off_leds_inside_while_loop(byte _queue_while_start, byte _q
 }
 
 
+void Compiler::_turn_on_leds_inside_while_loop(byte _queue_while_start, byte _queue_while_end, boolean _function_flag){
+    
+    for( byte i = _queue_while_start; i <= _queue_while_end; i++ ){
+        if(_function_flag && blocks._functions[i].address){
+            blocks.flash_led(blocks._functions[i].address, STATE_LED_ON);
+            delay(50);
+        }else if(!_function_flag && blocks._blocks[i].address){
+            blocks.flash_led(blocks._blocks[i].address, STATE_LED_ON);
+            delay(50);
+        }
+    }
+    
+}
+
+
 byte Compiler::_get_while_queue_start_by_end(byte queue, boolean _function_flag){
 
     byte end_queue = 0;
@@ -379,6 +394,7 @@ boolean Compiler::_next(void){
                     _turn_off_leds_inside_while_loop(_queue_while_start + 1, _queue_while_end, _function_flag);
             }
             if(_obstacle_flag && _queue_while_end > 0){
+                _turn_on_leds_inside_while_loop(_queue_while_start + 1, _queue_while_end, _function_flag);
                 _queue = _queue_while_end + 1;
                 _obstacle_flag = false;
                 _queue_while_start = 0;

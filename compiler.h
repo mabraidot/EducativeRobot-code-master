@@ -38,6 +38,7 @@ class Compiler {
         void _set_modifier_values(boolean _function_flag, byte queue, byte i, byte *_type, byte *_loop, byte *_old_value, byte *_address);
         byte _get_while_queue_start_by_end(byte queue, boolean _function_flag);
         byte _get_while_queue_end_by_start(byte queue, boolean _function_flag);
+        void _turn_on_leds_inside_while_loop(byte _queue_while_start, byte _queue_while_end, boolean _function_flag);
         void _turn_off_leds_inside_while_loop(byte _queue_while_start, byte _queue_while_end, boolean _function_flag);
 
 };
